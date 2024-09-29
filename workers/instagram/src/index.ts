@@ -27,7 +27,6 @@ app.get('/video-info', async (c) => {
 
 app.get('/video-download/:key', async (c) => {
   try {
-    c.req.param
     const { key } = c.req.param()
     const base64 = key.replace(/(\.mp4)$/g, '')
     console.log(base64)
