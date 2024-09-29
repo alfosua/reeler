@@ -1,7 +1,10 @@
 package com.catalinalabs.reeler.ui.screens
 
+import android.app.Activity
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
@@ -57,6 +60,10 @@ import com.catalinalabs.reeler.network.models.VideoInfoOutput
 import com.catalinalabs.reeler.ui.models.DownloadProcessStatus
 import com.catalinalabs.reeler.ui.models.DownloaderViewModel
 import com.catalinalabs.reeler.ui.theme.ReelerTheme
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import java.util.Locale
 
 @Composable
@@ -64,11 +71,26 @@ fun DownloaderScreen(
     viewModel: DownloaderViewModel,
     modifier: Modifier = Modifier,
     saveVideoToMediaStore: (ContentResolver, ByteArray, VideoInfoOutput) -> Unit = ::saveVideoToMediaStore,
+    showInterstitialAd: (Context) -> Unit = ::showInterstitialAd,
 ) {
     val context = LocalContext.current
     val resolver = context.contentResolver
     val status = viewModel.status
     val videoInfo = viewModel.videoInfo
+    val processVideoInfo = {
+        viewModel.processVideoInfo()
+        showInterstitialAd(context)
+    }
+
+    LaunchedEffect(Unit) {
+        if (context is Activity && context.intent?.action == Intent.ACTION_SEND) {
+            val urlFromIntent = context.intent.extras?.getString(Intent.EXTRA_TEXT)
+            if (urlFromIntent != null) {
+                viewModel.setVideoUrl(urlFromIntent)
+                processVideoInfo()
+            }
+        }
+    }
 
     if (status is DownloadProcessStatus.ProcessingSuccess) {
         LaunchedEffect(Unit) {
@@ -82,7 +104,7 @@ fun DownloaderScreen(
         DownloadField(
             videoUrl = viewModel.sourceUrl,
             onVideoUrlChange = viewModel::setVideoUrl,
-            onDownloadButtonClick = viewModel::processVideoInfo,
+            onDownloadButtonClick = processVideoInfo,
             modifier = Modifier.fillMaxWidth(),
         )
         if (videoInfo != null) {
@@ -140,6 +162,27 @@ private fun saveVideoToMediaStore(
     }
 }
 
+private fun showInterstitialAd(context: Context) {
+    InterstitialAd.load(
+        context,
+        "ca-app-pub-8588662607604944/6439579637",
+        AdRequest.Builder().build(),
+        object : InterstitialAdLoadCallback() {
+            override fun onAdFailedToLoad(adError: LoadAdError) {
+                super.onAdFailedToLoad(adError)
+                TODO("Handle the error.")
+            }
+
+            override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                super.onAdLoaded(interstitialAd)
+                if (context is Activity) {
+                    interstitialAd.show(context)
+                }
+            }
+        }
+    )
+}
+
 @Composable
 fun DownloadField(
     videoUrl: String,
@@ -183,6 +226,7 @@ fun DownloadField(
         ) {
             Text(
                 text = stringResource(R.string.download),
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
         }
     }

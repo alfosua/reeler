@@ -46,12 +46,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.catalinalabs.reeler.ui.components.AdBanner
+import com.catalinalabs.reeler.ui.components.AdBannerSize
 import com.catalinalabs.reeler.ui.screens.DownloaderScreen
 import com.catalinalabs.reeler.ui.theme.ReelerTheme
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        MobileAds.initialize(this)
+        MobileAds.setRequestConfiguration(
+            RequestConfiguration.Builder()
+                .setTestDeviceIds(listOf("ABCDEF012345"))
+                .build()
+        )
+
         enableEdgeToEdge()
         setContent {
             ReelerTheme {
@@ -71,7 +83,7 @@ data class NavBarItem (
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReelerApp() {
+fun ReelerApp(modifier: Modifier = Modifier) {
     val navBarItems = listOf(
         NavBarItem(
             title = "Home",
@@ -97,6 +109,7 @@ fun ReelerApp() {
     }
 
     Scaffold(
+        modifier = modifier.fillMaxSize(),
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -130,14 +143,9 @@ fun ReelerApp() {
                         .fillMaxWidth()
                         .background(color = MaterialTheme.colorScheme.surfaceVariant),
                 ) {
-                    Text(
-                        text = "AdMob Banner Here!",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(8.dp),
+                    AdBanner(
+                        size = AdBannerSize.Large,
+                        modifier = Modifier.align(Alignment.Center)
                     )
                 }
                 NavigationBar {
@@ -173,7 +181,6 @@ fun ReelerApp() {
                 }
             }
         },
-        modifier = Modifier.fillMaxSize(),
     ) { innerPadding ->
         DownloaderScreen(
             viewModel = viewModel(),
@@ -188,6 +195,14 @@ fun ReelerApp() {
 @Composable
 fun ReelerAppPreview() {
     ReelerTheme {
+        ReelerApp()
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ReelerAppDarkThemePreview() {
+    ReelerTheme(darkTheme = true) {
         ReelerApp()
     }
 }
