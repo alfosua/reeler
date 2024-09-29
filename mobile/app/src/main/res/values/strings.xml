@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">Reeler</string>
+    <string name="paste_video_link_here">Paste video link here</string>
+    <string name="download">Download</string>
+    <string name="video_thumbnail">Video thumbnail</string>
+    <string name="more_actions">More actions</string>
+    <string name="your_video_was_processed_successfully">Your video was processed successfully!</string>
+    <string name="video_downloaded_successfully">Video downloaded successfully!</string>
+    <string name="something_went_wrong_when_downloading_the_video">Something went wrong when downloading the video</string>
+    <string name="download_in_progress">Download in progress...</string>
+    <string name="processing_video_information">Processing video information...</string>
+    <string name="something_went_wrong_when_processing_the_video">Something went wrong when processing the video</string>
+    <string name="something_went_wrong">Something went wrong...</string>
 </resources>
