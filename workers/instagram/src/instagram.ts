@@ -123,15 +123,25 @@ async function getVideoJSONFromGraphQL(postId: string) {
 
 const formatGraphqlJson = (data: MediaData) => {
   const filename = getIGVideoFileName()
-  const width = data.dimensions.width.toString()
-  const height = data.dimensions.height.toString()
-  const videoUrl = data.video_url
+  const width = data.dimensions.width
+  const height = data.dimensions.height
+  const username = data.owner.username
+  const caption = data.edge_media_to_caption.edges[0].node?.text.split('\n')[0]
+  const duration = data.video_duration
+  const userAvatarUrl = data.owner.profile_pic_url
+  const thumbnailUrl = data.thumbnail_src
+  const contentUrl = data.video_url
 
   const videoJson: VideoInfo = {
     filename,
+    contentUrl,
     width,
     height,
-    contentUrl: videoUrl,
+    username,
+    caption,
+    duration,
+    userAvatarUrl,
+    thumbnailUrl,
     raw: data,
   }
 
@@ -317,7 +327,7 @@ type MediaData = {
   }
   edge_media_to_caption: {
     edges: Array<{
-      node: {
+      node?: {
         created_at: string
         text: string
         id: string

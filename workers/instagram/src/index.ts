@@ -19,6 +19,8 @@ app.get('/video-info', async (c) => {
       contentUrl: `${requestUrl.origin}/video-download/${btoa(
         result.contentUrl,
       )}.mp4`,
+      source: 'instagram',
+      sourceUrl: url,
     })
   } catch (e) {
     handleErrorAsHTTPException(e)
