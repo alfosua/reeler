@@ -6,7 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.catalinalabs.reeler.data.DownloadEntity
+import com.catalinalabs.reeler.data.DownloadRepository
 import com.catalinalabs.reeler.network.models.VideoInfoOutput
+import dagger.hilt.android.lifecycle.HiltViewModel
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -16,8 +19,14 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
+import java.time.LocalDate
+import java.util.Calendar
+import javax.inject.Inject
 
-class DownloaderViewModel : ViewModel() {
+@HiltViewModel
+class DownloaderViewModel @Inject constructor(
+    private val repository: DownloadRepository
+) : ViewModel() {
     var videoInfo: VideoInfoOutput? by mutableStateOf(null)
         private set
     var sourceUrl by mutableStateOf("")
@@ -40,7 +49,7 @@ class DownloaderViewModel : ViewModel() {
         }
     }
 
-    fun processDownload(saveFileAction: (ByteArray, VideoInfoOutput) -> Unit) {
+    fun processDownload(saveFileAction: (ByteArray, VideoInfoOutput) -> String) {
         viewModelScope.launch {
             val videoInfo = videoInfo
             status = DownloadProcessStatus.Downloading
@@ -50,8 +59,9 @@ class DownloaderViewModel : ViewModel() {
                 }
                 Log.d(::DownloaderViewModel.name, "Starting download of video")
                 val data: ByteArray = fetchVideoData(videoInfo)
-                saveFileAction(data, videoInfo)
+                val mediaUri = saveFileAction(data, videoInfo)
                 Log.d(::DownloaderViewModel.name, "Download of video \"${videoInfo.filename}\" completed successfully")
+                saveVideoDataIntoDatabase(videoInfo, mediaUri)
                 DownloadProcessStatus.DownloadSuccess
             } catch (e: Exception) {
                 Log.e(::DownloaderViewModel.name, "Failed to process download: $e")
@@ -88,4 +98,37 @@ class DownloaderViewModel : ViewModel() {
         val responseData: T = response.body()
         return responseData
     }
+
+    private suspend fun saveVideoDataIntoDatabase(videoInfo: VideoInfoOutput, mediaUri: String?) {
+        val date = Calendar.getInstance().time
+        val entity = videoInfo.asEntity(
+            mediaUri = mediaUri,
+            date = date.toString(),
+        )
+        Log.d(::DownloaderViewModel.name, "Inserting download record into database: $entity")
+        repository.insertDownload(entity)
+    }
+}
+
+private fun VideoInfoOutput.asEntity(
+    id: Int = 0,
+    mediaUri: String? = null,
+    date: String? = null,
+): DownloadEntity {
+    return DownloadEntity(
+        id = id,
+        mediaUri = mediaUri,
+        date = date,
+        filename = this.filename,
+        contentUrl = this.contentUrl,
+        sourceUrl = this.sourceUrl,
+        source = this.source,
+        width = this.width,
+        height = this.height,
+        username = this.username,
+        caption = this.caption,
+        duration = this.duration,
+        userAvatarUrl = this.userAvatarUrl,
+        thumbnailUrl = this.thumbnailUrl,
+    )
 }

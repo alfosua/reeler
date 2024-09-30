@@ -26,20 +26,23 @@ fun AdBanner(
     size: AdBannerSize = AdBannerSize.Small,
 ) {
     if (LocalInspectionMode.current) {
-        Box(
-            modifier = modifier
-                .width(size.width)
-                .height(size.height)
-                .background(Color.Red),
-        ) {
-            Text(
-                text = "AdMob Banner Here!",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White,
-                fontWeight = FontWeight.Bold,
+        Box(modifier) {
+            Box(
                 modifier = Modifier
+                    .width(size.width)
+                    .height(size.height)
+                    .background(Color.Red)
                     .align(Alignment.Center),
-            )
+            ) {
+                Text(
+                    text = "AdMob Banner Here!",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .align(Alignment.Center),
+                )
+            }
         }
     } else {
         val adSize = size.toAdMobSize()

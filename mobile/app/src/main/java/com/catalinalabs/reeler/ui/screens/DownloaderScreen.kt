@@ -70,7 +70,7 @@ import java.util.Locale
 fun DownloaderScreen(
     viewModel: DownloaderViewModel,
     modifier: Modifier = Modifier,
-    saveVideoToMediaStore: (ContentResolver, ByteArray, VideoInfoOutput) -> Unit = ::saveVideoToMediaStore,
+    saveVideoToMediaStore: (ContentResolver, ByteArray, VideoInfoOutput) -> String = ::saveVideoToMediaStore,
     showInterstitialAd: (Context) -> Unit = ::showInterstitialAd,
 ) {
     val context = LocalContext.current
@@ -140,7 +140,7 @@ private fun saveVideoToMediaStore(
     resolver: ContentResolver,
     data: ByteArray,
     videoInfo: VideoInfoOutput,
-) {
+): String {
     val targetPath = Environment.DIRECTORY_DOWNLOADS + "/Reeler Videos"
     val contentValues = ContentValues().apply {
         put(MediaStore.MediaColumns.DISPLAY_NAME, videoInfo.filename)
@@ -160,9 +160,14 @@ private fun saveVideoToMediaStore(
         write(data)
         close()
     }
+
+    return uri.toString()
 }
 
 private fun showInterstitialAd(context: Context) {
+    if (context !is Activity) {
+        throw Exception("Context is not an activity")
+    }
     InterstitialAd.load(
         context,
         "ca-app-pub-8588662607604944/6439579637",
@@ -175,9 +180,7 @@ private fun showInterstitialAd(context: Context) {
 
             override fun onAdLoaded(interstitialAd: InterstitialAd) {
                 super.onAdLoaded(interstitialAd)
-                if (context is Activity) {
-                    interstitialAd.show(context)
-                }
+                interstitialAd.show(context)
             }
         }
     )

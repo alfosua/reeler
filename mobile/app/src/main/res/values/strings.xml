@@ -11,4 +11,7 @@
     <string name="processing_video_information">Processing video information...</string>
     <string name="something_went_wrong_when_processing_the_video">Something went wrong when processing the video</string>
     <string name="something_went_wrong">Something went wrong...</string>
+    <string name="home">Home</string>
+    <string name="downloads">Downloads</string>
+    <string name="premium">Premium</string>
 </resources>
