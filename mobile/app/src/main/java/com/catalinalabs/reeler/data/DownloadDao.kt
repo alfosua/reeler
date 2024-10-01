@@ -12,6 +12,7 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Update
+import com.catalinalabs.reeler.network.models.VideoInfoOutput
 import kotlinx.coroutines.flow.Flow
 
 @Database(entities = [DownloadEntity::class], version = 1, exportSchema = false)
@@ -69,7 +70,23 @@ data class DownloadEntity(
     val date: String? = null
 )
 
-object DownloadEntityMockData{
+fun DownloadEntity.asVideoInfoOutput(): VideoInfoOutput {
+    return VideoInfoOutput(
+        filename = this.filename,
+        contentUrl = this.contentUrl,
+        sourceUrl = this.sourceUrl,
+        source = this.source,
+        width = this.width,
+        height = this.height,
+        username = this.username,
+        caption = this.caption,
+        duration = this.duration,
+        userAvatarUrl = this.userAvatarUrl,
+        thumbnailUrl = this.thumbnailUrl,
+    )
+}
+
+object DownloadMockData{
     val forPreview: List<DownloadEntity> = listOf(
         DownloadEntity(
             id = 1,

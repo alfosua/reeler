@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,13 +38,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.catalinalabs.reeler.R
 import com.catalinalabs.reeler.data.DownloadEntity
-import com.catalinalabs.reeler.data.DownloadEntityMockData
-import com.catalinalabs.reeler.network.models.VideoInfoOutput
+import com.catalinalabs.reeler.data.DownloadMockData
 import com.catalinalabs.reeler.ui.components.AdBanner
 import com.catalinalabs.reeler.ui.components.AdBannerSize
 import com.catalinalabs.reeler.ui.models.HistoryViewModel
@@ -93,7 +90,7 @@ fun HistoryScreen(
 fun HistoryScreenPreview() {
     ReelerTheme {
         HistoryScreen(
-            downloads = DownloadEntityMockData.forPreview,
+            downloads = DownloadMockData.forPreview,
             modifier = Modifier.fillMaxHeight(),
         )
     }
@@ -225,7 +222,7 @@ fun DownloadItem(
 fun DownloadItemPreview() {
     ReelerTheme {
         DownloadItem(
-            download = DownloadEntityMockData.forPreview[0],
+            download = DownloadMockData.forPreview[0],
             modifier = Modifier.fillMaxWidth(),
         )
     }
