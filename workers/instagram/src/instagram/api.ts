@@ -30,7 +30,7 @@ export async function getPostGraphqlData({
     },
   })
 
-  return await res.json()
+  return (await res.json()) as GraphQLResponse
 }
 
 function encodeGraphqlRequestData(shortcode: string) {
