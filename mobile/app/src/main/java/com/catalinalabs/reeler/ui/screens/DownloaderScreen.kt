@@ -73,6 +73,7 @@ fun DownloaderScreen(
     modifier: Modifier = Modifier,
     saveVideoToMediaStore: (ContentResolver, ByteArray, VideoInfoOutput) -> String = ::saveVideoToMediaStore,
     showInterstitialAd: (Context) -> Unit = ::showInterstitialAd,
+    navigateToVideoPlayer: (String) -> Unit = { },
 ) {
     DownloaderScreen(
         status = viewModel.status,
@@ -83,6 +84,7 @@ fun DownloaderScreen(
         setVideoUrl = viewModel::setVideoUrl,
         saveVideoToMediaStore = saveVideoToMediaStore,
         showInterstitialAd = showInterstitialAd,
+        navigateToVideoPlayer = navigateToVideoPlayer,
         modifier = modifier,
     )
 }
@@ -98,6 +100,7 @@ fun DownloaderScreen(
     modifier: Modifier = Modifier,
     saveVideoToMediaStore: (ContentResolver, ByteArray, VideoInfoOutput) -> String = ::saveVideoToMediaStore,
     showInterstitialAd: (Context) -> Unit = ::showInterstitialAd,
+    navigateToVideoPlayer: (String) -> Unit = { },
 ) {
     val context = LocalContext.current
     val resolver = context.contentResolver
@@ -192,7 +195,17 @@ private fun saveVideoToMediaStore(
         close()
     }
 
-    return uri.toString()
+    val projection = arrayOf(MediaStore.Downloads.DATA)
+    val cursor = resolver.query(uri, projection, null, null, null)
+    var filePath = ""
+    cursor?.use{
+        if (it.moveToFirst()) {
+            val columnIndex = it.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+            filePath = it.getString(columnIndex)
+        }
+    }
+
+    return filePath
 }
 
 private fun showInterstitialAd(context: Context) {

@@ -1,8 +1,14 @@
 package com.catalinalabs.reeler.ui
 
-enum class Routes {
-    Home,
-    Downloads,
-    Premium,
-    VideoPlayer,
+import kotlinx.serialization.Serializable
+
+object Routes {
+    @Serializable
+    object Home
+    @Serializable
+    object Downloads
+    @Serializable
+    object Premium
+    @Serializable
+    data class VideoPlayer(val filePath: String)
 }

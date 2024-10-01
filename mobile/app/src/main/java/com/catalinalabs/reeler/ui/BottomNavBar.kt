@@ -21,6 +21,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,6 +32,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.toRoute
 import com.catalinalabs.reeler.R
 import com.catalinalabs.reeler.ui.components.AdBanner
 import com.catalinalabs.reeler.ui.components.AdBannerSize
@@ -40,10 +42,21 @@ fun BottomNavBar(
     navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
-    var selectedItem by rememberSaveable { mutableIntStateOf(0) }
+    val currentRoute = navController.currentBackStackEntry?.toRoute<Any>()
+    var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     val handleClick = { index: Int, item: NavBarItem ->
-        selectedItem = index
+        selectedIndex = index
         navController.navigate(item.route)
+    }
+
+    LaunchedEffect(currentRoute) {
+        val selectedItem = navBarItems[selectedIndex]
+        if (currentRoute != selectedItem.route) {
+            val newSelectedItem = navBarItems.find { it.route == currentRoute }
+            if (newSelectedItem != null) {
+                selectedIndex = navBarItems.indexOf(newSelectedItem)
+            }
+        }
     }
 
     Column(modifier) {
@@ -61,10 +74,10 @@ fun BottomNavBar(
         NavigationBar {
             navBarItems.forEachIndexed { index, item ->
                 NavigationBarItem(
-                    selected = selectedItem == index,
+                    selected = selectedIndex == index,
                     onClick = { handleClick(index, item) },
                     label = { Text(stringResource(item.title)) },
-                    icon = { NavBarIcon(item, selectedItem, index) }
+                    icon = { NavBarIcon(item, selectedIndex, index) }
                 )
             }
         }
@@ -99,7 +112,7 @@ private fun NavBarIcon(
 
 private data class NavBarItem(
     @StringRes val title: Int,
-    val route: String,
+    val route: Any,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
     val hasNews: Boolean,
@@ -109,21 +122,21 @@ private data class NavBarItem(
 private val navBarItems = listOf(
     NavBarItem(
         title = R.string.home,
-        route = Routes.Home.name,
+        route = Routes.Home,
         selectedIcon = Icons.Rounded.Home,
         unselectedIcon = Icons.Outlined.Home,
         hasNews = false,
     ),
     NavBarItem(
         title = R.string.downloads,
-        route = Routes.Downloads.name,
+        route = Routes.Downloads,
         selectedIcon = Icons.Rounded.Download,
         unselectedIcon = Icons.Outlined.Download,
         hasNews = false,
     ),
     NavBarItem(
         title = R.string.premium,
-        route = Routes.Premium.name,
+        route = Routes.Premium,
         selectedIcon = Icons.Filled.WorkspacePremium,
         unselectedIcon = Icons.Outlined.WorkspacePremium,
         hasNews = false,

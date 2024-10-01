@@ -12,6 +12,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.toRoute
 import com.catalinalabs.reeler.ui.components.VideoPlayer
 import com.catalinalabs.reeler.ui.screens.DownloaderScreen
 import com.catalinalabs.reeler.ui.screens.HistoryScreen
@@ -34,26 +35,35 @@ fun Router(
 
     NavHost(
         navController = navController,
-        startDestination = Routes.Home.name,
+        startDestination = Routes.Home,
         modifier = modifier,
     ) {
-        composable(route = Routes.Home.name) {
+        composable<Routes.Home> {
             DownloaderScreen(
                 viewModel = hiltViewModel(),
                 modifier = Modifier.fillMaxHeight(),
+                navigateToVideoPlayer = { uri ->
+                    navController.navigate(Routes.VideoPlayer(uri))
+                },
             )
         }
-        composable(route = Routes.Downloads.name) {
+        composable<Routes.Downloads> {
             HistoryScreen(
                 viewModel = hiltViewModel(),
                 modifier = Modifier.fillMaxHeight(),
+                navigateToVideoPlayer = { uri ->
+                    navController.navigate(Routes.VideoPlayer(uri))
+                },
             )
         }
-        composable(route = Routes.Premium.name) {
+        composable<Routes.Premium> {
             PremiumScreen()
         }
-        composable(route = Routes.VideoPlayer.name) {
-            VideoPlayer()
+        composable<Routes.VideoPlayer> { backStackEntry ->
+            val route: Routes.VideoPlayer = backStackEntry.toRoute()
+            VideoPlayer(
+                filePath = route.filePath,
+            )
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.catalinalabs.reeler.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,22 +54,33 @@ import java.util.Locale
 fun HistoryScreen(
     viewModel: HistoryViewModel,
     modifier: Modifier = Modifier,
+    navigateToVideoPlayer: (String) -> Unit = { },
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val downloads = uiState.items
 
-    HistoryScreen(downloads, modifier)
+    HistoryScreen(
+        downloads,
+        modifier,
+        navigateToVideoPlayer,
+    )
 }
 
 @Composable
 fun HistoryScreen(
     downloads: List<DownloadEntity>,
     modifier: Modifier = Modifier,
+    navigateToVideoPlayer: (String) -> Unit = { },
 ) {
     LazyColumn(modifier.padding(top = 32.dp)) {
         itemsIndexed(downloads) { index, download ->
             DownloadItem(
                 download = download,
+                onItemClick = {
+                    if (download.mediaUri != null) {
+                        navigateToVideoPlayer(download.mediaUri)
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp),
@@ -100,6 +112,7 @@ fun HistoryScreenPreview() {
 fun DownloadItem(
     download: DownloadEntity,
     modifier: Modifier = Modifier,
+    onItemClick: () -> Unit = { },
 ) {
     val context = LocalContext.current
 
@@ -114,7 +127,8 @@ fun DownloadItem(
                 .clip(RoundedCornerShape(12.dp))
                 .background(color = MaterialTheme.colorScheme.surfaceContainerLow)
                 .width(128.dp)
-                .height(72.dp),
+                .height(72.dp)
+                .clickable(onClick = onItemClick),
         ) {
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(context)
@@ -163,7 +177,9 @@ fun DownloadItem(
         Spacer(Modifier.width(16.dp))
         Column(
             verticalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = onItemClick),
         ) {
             Text(
                 text = download.caption ?: download.filename,
