@@ -53,6 +53,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.catalinalabs.reeler.ui.components.AdBanner
 import com.catalinalabs.reeler.ui.components.AdBannerSize
+import com.catalinalabs.reeler.ui.components.VideoPlayer
 import com.catalinalabs.reeler.ui.screens.DownloaderScreen
 import com.catalinalabs.reeler.ui.screens.HistoryScreen
 import com.catalinalabs.reeler.ui.theme.ReelerTheme
@@ -252,6 +253,9 @@ fun Router(
         composable(route = Routes.Premium.name) {
             ComingSoon()
         }
+        composable(route = Routes.VideoPlayer.name) {
+            VideoPlayer()
+        }
     }
 }
 
@@ -259,6 +263,7 @@ enum class Routes {
     Home,
     Downloads,
     Premium,
+    VideoPlayer,
 }
 
 @Composable
