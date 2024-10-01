@@ -1,7 +1,6 @@
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
 import { fetchVideoInfo } from './instagram'
-import { stream } from 'hono/streaming'
 
 const app = new Hono()
 
@@ -53,11 +52,7 @@ app.get('/video-download/:key', async (c) => {
       'attachment; filename="downloaded-video.mp4"',
     )
 
-    return stream(c, async (stream) => {
-      if (response.body !== null) {
-        await stream.pipe(response.body)
-      }
-    })
+    return c.body(response.body)
   } catch (e) {
     handleErrorAsHTTPException(e)
   }
@@ -67,7 +62,7 @@ function handleErrorAsHTTPException(e: unknown) {
   if (typeof e === 'string') {
     throw new HTTPException(500, { message: e })
   } else if (e instanceof Error) {
-    throw new HTTPException(500, { message: e.message })
+    throw new HTTPException(500, { message: e.message, cause: e })
   }
   throw new HTTPException(500, { message: 'Unknown error' })
 }

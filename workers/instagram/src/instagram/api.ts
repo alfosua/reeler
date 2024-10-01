@@ -1,169 +1,17 @@
-export async function fetchVideoInfo(url: string) {
-  const postId = getPostIdFromUrl(url)
-
-  if (!postId) {
-    throw new Error('Instagram post ID not found.')
-  }
-
-  const videoInfo = await getVideoInfo(postId)
-
-  return videoInfo
-}
-
 const InstagramEndpoints = {
-  GetByPost: `/p`,
-  GetByGraphQL: `/api/graphql`,
+  GetByPost: `https://www.instagram.com/p`,
+  GetByGraphQL: `https://www.instagram.com/api/graphql`,
 } as const
 
-class APIClient {
-  baseURL: string
-
-  constructor(baseURL: string) {
-    this.baseURL = baseURL
-  }
-
-  _getRequestUrl(endpoint: string, options?: APIClientOptions) {
-    if (options?.noBaseURL) {
-      return endpoint
-    }
-
-    const baseUrl = options?.baseURL ?? this.baseURL
-
-    if (!endpoint.startsWith('/')) {
-      return `${baseUrl}/${endpoint}`
-    }
-
-    return `${baseUrl}${endpoint}`
-  }
-
-  async fetch(url: string, options?: APIClientOptions) {
-    let response
-
-    try {
-      response = await fetch(url, options)
-
-      if (!response.ok) {
-        // const errorMessage = await this._getResponseErrors(response)
-        // throw new Error(errorMessage)
-        throw new Error('Oops! looks like something went wrong')
-      }
-    } catch (error: any) {
-      // if (error.name === "AbortError") {
-      //   throw new CustomError("The request was aborted by the user");
-      // } else if (error.name === "SyntaxError" || error.name === "TypeError") {
-      //   throw new CustomError("Oops! Looks like the client is having issues");
-      // }
-
-      // if (error.name === "NetworkError") {
-      //   throw new NetworkError(
-      //     "Network error, check your internet connection and try again"
-      //   );
-      // } else if (error.name === "SecurityError") {
-      //   throw new NetworkError(
-      //     "We are having issues connecting to the server. Please try again later"
-      //   );
-      // }
-
-      // if (error instanceof CustomError) {
-      //   throw error;
-      // }
-
-      throw new Error('Oops! looks like something went wrong')
-    }
-
-    return response
-  }
-
-  async post(endpoint: string, options?: APIClientOptions) {
-    const requestUrl = this._getRequestUrl(endpoint, options)
-
-    return this.fetch(requestUrl, {
-      ...options,
-      method: 'POST',
-    })
-  }
-}
-
-const apiClient = new APIClient('/api')
-
-function getPostIdFromUrl(postUrl: string) {
-  const postRegex =
-    /^https:\/\/(?:www\.)?instagram\.com\/p\/([a-zA-Z0-9_-]+)\/?/
-  const reelRegex =
-    /^https:\/\/(?:www\.)?instagram\.com\/reels?\/([a-zA-Z0-9_-]+)\/?/
-
-  return postUrl.match(postRegex)?.at(-1) || postUrl.match(reelRegex)?.at(-1)
-}
-
-async function getVideoInfo(postId: string) {
-  let videoInfo: VideoInfo | null = null
-
-  videoInfo = await getVideoJSONFromGraphQL(postId)
-  if (videoInfo) return videoInfo
-
-  throw new Error('Video link for this post is not public.')
-}
-
-async function getVideoJSONFromGraphQL(postId: string) {
-  const data = await getPostGraphqlData({ postId })
-
-  const mediaData = data.data?.xdt_shortcode_media
-
-  if (!mediaData) {
-    return null
-  }
-
-  if (!mediaData.is_video) {
-    throw new Error('This post is not a video')
-  }
-
-  const videoInfo = formatGraphqlJson(mediaData)
-  return videoInfo
-}
-
-const formatGraphqlJson = (data: MediaData) => {
-  const filename = getIGVideoFileName()
-  const width = data.dimensions.width
-  const height = data.dimensions.height
-  const username = data.owner.username
-  const caption = data.edge_media_to_caption.edges[0].node?.text.split('\n')[0]
-  const duration = data.video_duration
-  const userAvatarUrl = data.owner.profile_pic_url
-  const thumbnailUrl = data.thumbnail_src
-  const contentUrl = data.video_url
-
-  const videoJson: VideoInfo = {
-    filename,
-    contentUrl,
-    width,
-    height,
-    username,
-    caption,
-    duration,
-    userAvatarUrl,
-    thumbnailUrl,
-    raw: data,
-  }
-
-  return videoJson
-}
-
-const getIGVideoFileName = () => getTimedFilename('ig-downloader', 'mp4')
-
-const getTimedFilename = (name: string, ext: string) => {
-  const timeStamp = Math.floor(Date.now() / 1000).toString()
-  return `${name}-${timeStamp}.${ext}`
-}
-
-async function getPostGraphqlData({
+export async function getPostGraphqlData({
   postId,
 }: {
   postId: string
 }): Promise<GraphQLResponse> {
   const encodedData = encodeGraphqlRequestData(postId)
 
-  const res = await apiClient.post(InstagramEndpoints.GetByGraphQL, {
-    baseURL: 'https://www.instagram.com',
+  const res = await fetch(InstagramEndpoints.GetByGraphQL, {
+    method: 'POST',
     body: encodedData,
     headers: {
       Accept: '*/*',
@@ -182,9 +30,7 @@ async function getPostGraphqlData({
     },
   })
 
-  const data: GraphQLResponse = await res.json()
-
-  return data
+  return await res.json()
 }
 
 function encodeGraphqlRequestData(shortcode: string) {
@@ -212,6 +58,7 @@ function encodeGraphqlRequestData(shortcode: string) {
     __spin_t: '1695523385',
     fb_api_caller_class: 'RelayModern',
     fb_api_req_friendly_name: 'PolarisPostActionLoadPostQueryQuery',
+
     variables: JSON.stringify({
       shortcode: shortcode,
       fetch_comment_count: 'null',
@@ -232,14 +79,7 @@ function encodeGraphqlRequestData(shortcode: string) {
   return encoded
 }
 
-type APIClientOptions = RequestInit & {
-  baseURL?: string
-  noBaseURL?: boolean
-  authRetries?: number
-  withCredentials?: boolean
-}
-
-type GraphQLResponse = {
+interface GraphQLResponse {
   data: {
     xdt_shortcode_media: MediaData
   }
@@ -248,7 +88,7 @@ type GraphQLResponse = {
   }
 }
 
-type MediaData = {
+export interface MediaData {
   __typename: string
   __isXDTGraphMediaInterface: string
   id: string
