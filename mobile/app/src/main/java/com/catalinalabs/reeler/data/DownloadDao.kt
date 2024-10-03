@@ -15,9 +15,10 @@ import androidx.room.Update
 import com.catalinalabs.reeler.network.models.VideoInfoOutput
 import kotlinx.coroutines.flow.Flow
 
-@Database(entities = [DownloadEntity::class], version = 1, exportSchema = false)
-abstract class ReelerDatabase: RoomDatabase() {
+@Database(entities = [DownloadEntity::class], version = 2, exportSchema = false)
+abstract class ReelerDatabase : RoomDatabase() {
     abstract fun downloadDao(): DownloadDao
+
     companion object {
         @Volatile
         private var Instance: ReelerDatabase? = null
@@ -67,7 +68,8 @@ data class DownloadEntity(
     val userAvatarUrl: String? = null,
     val thumbnailUrl: String? = null,
     val mediaUri: String? = null,
-    val date: String? = null
+    val timestamp: Long? = null,
+    val size: Long = 0,
 )
 
 fun DownloadEntity.asVideoInfoOutput(): VideoInfoOutput {
@@ -86,7 +88,7 @@ fun DownloadEntity.asVideoInfoOutput(): VideoInfoOutput {
     )
 }
 
-object DownloadMockData{
+object DownloadMockData {
     val forPreview: List<DownloadEntity> = listOf(
         DownloadEntity(
             id = 1,
@@ -99,7 +101,7 @@ object DownloadMockData{
             duration = 19.2,
             userAvatarUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/457621679_877143554292925_4043951588544897022_n.jpg?stp=dst-jpg_e0_s150x150&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=101&_nc_ohc=BsuRG3nmJBYQ7kNvgHKLVtG&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBkT_2-MZ4SwYe5vD9FCmwdMLvxhJT03wn43vDi9cDFmA&oe=66FEEF3C&_nc_sid=10d13b",
             thumbnailUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.29350-15/441015281_460146716487560_3290678782543390784_n.jpg?stp=c0.280.720.720a_dst-jpg_e15_s640x640&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=108&_nc_ohc=6VUypcyjz54Q7kNvgHCfifs&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBSTuioxdGQnAKVeFPWaHcr9efa18de73IH0RDqQqrmkg&oe=66FEDE70&_nc_sid=10d13b",
-            date = "",
+            timestamp = null,
             mediaUri = "",
         ),
         DownloadEntity(
@@ -113,7 +115,7 @@ object DownloadMockData{
             duration = 19.2,
             userAvatarUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/457621679_877143554292925_4043951588544897022_n.jpg?stp=dst-jpg_e0_s150x150&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=101&_nc_ohc=BsuRG3nmJBYQ7kNvgHKLVtG&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBkT_2-MZ4SwYe5vD9FCmwdMLvxhJT03wn43vDi9cDFmA&oe=66FEEF3C&_nc_sid=10d13b",
             thumbnailUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.29350-15/441015281_460146716487560_3290678782543390784_n.jpg?stp=c0.280.720.720a_dst-jpg_e15_s640x640&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=108&_nc_ohc=6VUypcyjz54Q7kNvgHCfifs&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBSTuioxdGQnAKVeFPWaHcr9efa18de73IH0RDqQqrmkg&oe=66FEDE70&_nc_sid=10d13b",
-            date = "",
+            timestamp = null,
             mediaUri = "",
         ),
         DownloadEntity(
@@ -127,7 +129,7 @@ object DownloadMockData{
             duration = 19.2,
             userAvatarUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/457621679_877143554292925_4043951588544897022_n.jpg?stp=dst-jpg_e0_s150x150&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=101&_nc_ohc=BsuRG3nmJBYQ7kNvgHKLVtG&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBkT_2-MZ4SwYe5vD9FCmwdMLvxhJT03wn43vDi9cDFmA&oe=66FEEF3C&_nc_sid=10d13b",
             thumbnailUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.29350-15/441015281_460146716487560_3290678782543390784_n.jpg?stp=c0.280.720.720a_dst-jpg_e15_s640x640&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=108&_nc_ohc=6VUypcyjz54Q7kNvgHCfifs&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBSTuioxdGQnAKVeFPWaHcr9efa18de73IH0RDqQqrmkg&oe=66FEDE70&_nc_sid=10d13b",
-            date = "",
+            timestamp = null,
             mediaUri = "",
         ),
         DownloadEntity(
@@ -141,7 +143,7 @@ object DownloadMockData{
             duration = 19.2,
             userAvatarUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/457621679_877143554292925_4043951588544897022_n.jpg?stp=dst-jpg_e0_s150x150&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=101&_nc_ohc=BsuRG3nmJBYQ7kNvgHKLVtG&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBkT_2-MZ4SwYe5vD9FCmwdMLvxhJT03wn43vDi9cDFmA&oe=66FEEF3C&_nc_sid=10d13b",
             thumbnailUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.29350-15/441015281_460146716487560_3290678782543390784_n.jpg?stp=c0.280.720.720a_dst-jpg_e15_s640x640&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=108&_nc_ohc=6VUypcyjz54Q7kNvgHCfifs&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBSTuioxdGQnAKVeFPWaHcr9efa18de73IH0RDqQqrmkg&oe=66FEDE70&_nc_sid=10d13b",
-            date = "",
+            timestamp = null,
             mediaUri = "",
         ),
         DownloadEntity(
@@ -155,7 +157,7 @@ object DownloadMockData{
             duration = 19.2,
             userAvatarUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/457621679_877143554292925_4043951588544897022_n.jpg?stp=dst-jpg_e0_s150x150&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=101&_nc_ohc=BsuRG3nmJBYQ7kNvgHKLVtG&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBkT_2-MZ4SwYe5vD9FCmwdMLvxhJT03wn43vDi9cDFmA&oe=66FEEF3C&_nc_sid=10d13b",
             thumbnailUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.29350-15/441015281_460146716487560_3290678782543390784_n.jpg?stp=c0.280.720.720a_dst-jpg_e15_s640x640&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=108&_nc_ohc=6VUypcyjz54Q7kNvgHCfifs&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBSTuioxdGQnAKVeFPWaHcr9efa18de73IH0RDqQqrmkg&oe=66FEDE70&_nc_sid=10d13b",
-            date = "",
+            timestamp = null,
             mediaUri = "",
         ),
         DownloadEntity(
@@ -169,7 +171,7 @@ object DownloadMockData{
             duration = 19.2,
             userAvatarUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/457621679_877143554292925_4043951588544897022_n.jpg?stp=dst-jpg_e0_s150x150&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=101&_nc_ohc=BsuRG3nmJBYQ7kNvgHKLVtG&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBkT_2-MZ4SwYe5vD9FCmwdMLvxhJT03wn43vDi9cDFmA&oe=66FEEF3C&_nc_sid=10d13b",
             thumbnailUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.29350-15/441015281_460146716487560_3290678782543390784_n.jpg?stp=c0.280.720.720a_dst-jpg_e15_s640x640&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=108&_nc_ohc=6VUypcyjz54Q7kNvgHCfifs&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBSTuioxdGQnAKVeFPWaHcr9efa18de73IH0RDqQqrmkg&oe=66FEDE70&_nc_sid=10d13b",
-            date = "",
+            timestamp = null,
             mediaUri = "",
         ),
         DownloadEntity(
@@ -183,7 +185,7 @@ object DownloadMockData{
             duration = 19.2,
             userAvatarUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/457621679_877143554292925_4043951588544897022_n.jpg?stp=dst-jpg_e0_s150x150&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=101&_nc_ohc=BsuRG3nmJBYQ7kNvgHKLVtG&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBkT_2-MZ4SwYe5vD9FCmwdMLvxhJT03wn43vDi9cDFmA&oe=66FEEF3C&_nc_sid=10d13b",
             thumbnailUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.29350-15/441015281_460146716487560_3290678782543390784_n.jpg?stp=c0.280.720.720a_dst-jpg_e15_s640x640&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=108&_nc_ohc=6VUypcyjz54Q7kNvgHCfifs&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBSTuioxdGQnAKVeFPWaHcr9efa18de73IH0RDqQqrmkg&oe=66FEDE70&_nc_sid=10d13b",
-            date = "",
+            timestamp = null,
             mediaUri = "",
         ),
         DownloadEntity(
@@ -197,7 +199,7 @@ object DownloadMockData{
             duration = 19.2,
             userAvatarUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.2885-19/457621679_877143554292925_4043951588544897022_n.jpg?stp=dst-jpg_e0_s150x150&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=101&_nc_ohc=BsuRG3nmJBYQ7kNvgHKLVtG&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBkT_2-MZ4SwYe5vD9FCmwdMLvxhJT03wn43vDi9cDFmA&oe=66FEEF3C&_nc_sid=10d13b",
             thumbnailUrl = "https://scontent-yyz1-1.cdninstagram.com/v/t51.29350-15/441015281_460146716487560_3290678782543390784_n.jpg?stp=c0.280.720.720a_dst-jpg_e15_s640x640&_nc_ht=scontent-yyz1-1.cdninstagram.com&_nc_cat=108&_nc_ohc=6VUypcyjz54Q7kNvgHCfifs&_nc_gid=b260e280f8ee4b079f61b4c67b4b2c92&edm=APs17CUBAAAA&ccb=7-5&oh=00_AYBSTuioxdGQnAKVeFPWaHcr9efa18de73IH0RDqQqrmkg&oe=66FEDE70&_nc_sid=10d13b",
-            date = "",
+            timestamp = null,
             mediaUri = "",
         ),
     )

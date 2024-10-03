@@ -3,5 +3,9 @@ package com.catalinalabs.reeler.network
 import com.catalinalabs.reeler.network.models.VideoInfoOutput
 
 interface WorkerApiService {
-    suspend fun getVideo(): VideoInfoOutput
+    suspend fun getVideoInfo(sourceUrl: String): VideoInfoOutput
+    companion object {
+        const val LOG_TAG = "WorkerApiService"
+    }
 }
+

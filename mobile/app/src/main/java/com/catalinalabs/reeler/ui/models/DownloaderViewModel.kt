@@ -1,5 +1,6 @@
 package com.catalinalabs.reeler.ui.models
 
+import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -8,24 +9,25 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.catalinalabs.reeler.data.DownloadEntity
 import com.catalinalabs.reeler.data.DownloadRepository
+import com.catalinalabs.reeler.network.VideoDataFetcher
+import com.catalinalabs.reeler.network.WorkerApiService
 import com.catalinalabs.reeler.network.models.VideoInfoOutput
+import com.catalinalabs.reeler.services.ReelerAdsService
+import com.catalinalabs.reeler.services.ReelerMediaService
+import com.catalinalabs.reeler.services.ReelerNotificationsService
 import dagger.hilt.android.lifecycle.HiltViewModel
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.get
-import io.ktor.client.statement.HttpResponse
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import java.time.LocalDate
 import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
 class DownloaderViewModel @Inject constructor(
-    private val repository: DownloadRepository
+    private val repository: DownloadRepository,
+    private val notifications: ReelerNotificationsService,
+    private val media: ReelerMediaService,
+    private val workerApi: WorkerApiService,
+    private val videoFetcher: VideoDataFetcher,
+    private val ads: ReelerAdsService,
 ) : ViewModel() {
     var videoInfo: VideoInfoOutput? by mutableStateOf(null)
         private set
@@ -34,91 +36,91 @@ class DownloaderViewModel @Inject constructor(
     var status: DownloadProcessStatus by mutableStateOf(DownloadProcessStatus.Idle)
         private set
 
-    fun processVideoInfo() {
+    fun startDownloadProcess(context: Context) {
         viewModelScope.launch {
-            status = DownloadProcessStatus.Processing
-            status = try {
-                Log.d(::DownloaderViewModel.name, "Processing video info for URL: $sourceUrl")
-                videoInfo = fetchVideoInfo(sourceUrl)
-                Log.d(::DownloaderViewModel.name, "Successfully processed video info from URL \"$sourceUrl\": $videoInfo")
-                DownloadProcessStatus.ProcessingSuccess
-            } catch (e: Exception) {
-                Log.e(::DownloaderViewModel.name, "Failed to process video info: $e")
-                DownloadProcessStatus.Error(e.message ?: "Unknown error")
-            }
+            workOnVideoProcessing()
+            ads.showInterstitial(context)
+            workOnVideoDownload()
         }
     }
 
-    fun processDownload(saveFileAction: (ByteArray, VideoInfoOutput) -> String) {
-        viewModelScope.launch {
-            val videoInfo = videoInfo
-            status = DownloadProcessStatus.Downloading
-            status = try {
-                if (videoInfo == null) {
-                    throw Exception("No video info available")
-                }
-                Log.d(::DownloaderViewModel.name, "Starting download of video")
-                val data: ByteArray = fetchVideoData(videoInfo)
-                val mediaUri = saveFileAction(data, videoInfo)
-                Log.d(::DownloaderViewModel.name, "Download of video \"${videoInfo.filename}\" completed successfully")
-                saveVideoDataIntoDatabase(videoInfo, mediaUri)
-                DownloadProcessStatus.DownloadSuccess
-            } catch (e: Exception) {
-                Log.e(::DownloaderViewModel.name, "Failed to process download: $e")
-                DownloadProcessStatus.Error(e.message ?: "Unknown error", "downloading")
-            }
-            sourceUrl = ""
-        }
-    }
-
-    @JvmName("setVideoUrlPublic")
-    fun setVideoUrl(url: String) {
+    fun updateSourceUrl(url: String) {
         sourceUrl = url
     }
 
-    private suspend fun fetchVideoInfo(sourceUrl: String): VideoInfoOutput {
-        val targetUrl = "https://instagram.alfosuag.workers.dev/video-info?url=$sourceUrl"
-        Log.d(::DownloaderViewModel.name, "Requesting video information at: $targetUrl")
-        val client = HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json(Json {
-                    ignoreUnknownKeys = true
-                })
-            }
+    private fun updateStatus(newStatus: DownloadProcessStatus) {
+        status = newStatus
+    }
+
+    private suspend fun workOnVideoProcessing() {
+        try {
+            updateStatus(DownloadProcessStatus.Processing)
+            Log.d(::DownloaderViewModel.name, "Processing video info for URL: $sourceUrl")
+            videoInfo = workerApi.getVideoInfo(sourceUrl)
+            Log.d(
+                ::DownloaderViewModel.name,
+                "Successfully processed video info from URL \"$sourceUrl\": $videoInfo"
+            )
+            updateStatus(DownloadProcessStatus.ProcessingSuccess)
+        } catch (e: Exception) {
+            Log.e(::DownloaderViewModel.name, "Failed to process video info: $e")
+            updateStatus(DownloadProcessStatus.Error(e.message ?: "Unknown error", "processing"))
         }
-        val response: HttpResponse = client.get(targetUrl)
-        val videoInfo: VideoInfoOutput = response.body()
-        return videoInfo
     }
 
-    private suspend inline fun<reified T> fetchVideoData(videoInfo: VideoInfoOutput): T {
-        Log.d(::DownloaderViewModel.name, "Requesting video data at: $videoInfo.contentUrl")
-        val client = HttpClient(CIO)
-        val response: HttpResponse = client.get(videoInfo.contentUrl)
-        val responseData: T = response.body()
-        return responseData
+    private suspend fun workOnVideoDownload() {
+        try {
+            val videoInfo = videoInfo
+            updateStatus(DownloadProcessStatus.Downloading)
+            if (videoInfo == null) {
+                throw Exception("No video info available")
+            }
+            Log.d(::DownloaderViewModel.name, "Starting download of video")
+            val data = videoFetcher.getVideoData(videoInfo.contentUrl)
+            val mediaUri = media.saveVideo(data, videoInfo)
+            Log.d(
+                ::DownloaderViewModel.name,
+                "Download of video \"${videoInfo.filename}\" completed successfully"
+            )
+            val timestamp = Calendar.getInstance().time.time
+            val download =
+                saveVideoDataIntoDatabase(videoInfo, mediaUri, timestamp, data.size.toLong())
+            notifications.showDownloadCompletion(timestamp.toInt(), download)
+            updateStatus(DownloadProcessStatus.DownloadSuccess)
+        } catch (e: Exception) {
+            Log.e(::DownloaderViewModel.name, "Failed to process download: $e")
+            updateStatus(DownloadProcessStatus.Error(e.message ?: "Unknown error", "downloading"))
+        }
+        sourceUrl = ""
     }
 
-    private suspend fun saveVideoDataIntoDatabase(videoInfo: VideoInfoOutput, mediaUri: String?) {
-        val date = Calendar.getInstance().time
+    private suspend fun saveVideoDataIntoDatabase(
+        videoInfo: VideoInfoOutput,
+        filePath: String?,
+        timestamp: Long?,
+        size: Long,
+    ): DownloadEntity {
         val entity = videoInfo.asEntity(
-            mediaUri = mediaUri,
-            date = date.toString(),
+            mediaUri = filePath,
+            timestamp = timestamp,
+            size = size,
         )
         Log.d(::DownloaderViewModel.name, "Inserting download record into database: $entity")
         repository.insertDownload(entity)
+        return entity
     }
 }
 
 private fun VideoInfoOutput.asEntity(
     id: Int = 0,
     mediaUri: String? = null,
-    date: String? = null,
+    timestamp: Long? = null,
+    size: Long = 0,
 ): DownloadEntity {
     return DownloadEntity(
         id = id,
         mediaUri = mediaUri,
-        date = date,
+        timestamp = timestamp,
         filename = this.filename,
         contentUrl = this.contentUrl,
         sourceUrl = this.sourceUrl,
@@ -130,5 +132,6 @@ private fun VideoInfoOutput.asEntity(
         duration = this.duration,
         userAvatarUrl = this.userAvatarUrl,
         thumbnailUrl = this.thumbnailUrl,
+        size = size,
     )
 }

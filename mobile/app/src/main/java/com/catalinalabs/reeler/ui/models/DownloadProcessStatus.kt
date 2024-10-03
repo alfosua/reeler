@@ -1,7 +1,5 @@
 package com.catalinalabs.reeler.ui.models
 
-import com.catalinalabs.reeler.network.models.VideoInfoOutput
-
 interface DownloadProcessStatus {
     object Idle : DownloadProcessStatus
     object Processing : DownloadProcessStatus
@@ -13,4 +11,3 @@ interface DownloadProcessStatus {
         val whenHappened: String = "processing"
     ) : DownloadProcessStatus
 }
-
