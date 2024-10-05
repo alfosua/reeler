@@ -13,16 +13,16 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val repository: DownloadRepository
+    private val repository: DownloadRepository,
 ) : ViewModel() {
-    var uiState: StateFlow<HistoryUiState> =
+    val uiState: StateFlow<UiState> =
         repository.getAllDownloadsStream()
-            .map { HistoryUiState(it) }
+            .map { UiState(it) }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5_000),
-                initialValue = HistoryUiState(),
+                initialValue = UiState(),
             )
-}
 
-data class HistoryUiState(val items: List<DownloadEntity> = listOf())
+    data class UiState(val items: List<DownloadEntity> = listOf())
+}

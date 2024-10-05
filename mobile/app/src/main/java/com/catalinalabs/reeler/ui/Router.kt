@@ -50,6 +50,7 @@ fun Router(
         composable<Routes.Downloads> {
             HistoryScreen(
                 viewModel = hiltViewModel(),
+                downloadActionsViewModel = hiltViewModel(),
                 modifier = Modifier.fillMaxHeight(),
                 navigateToVideoPlayer = { uri ->
                     navController.navigate(Routes.VideoPlayer(uri))
