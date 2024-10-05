@@ -87,96 +87,21 @@ fun DownloadItem(
     onDelete: () -> Unit = { },
     onShare: () -> Unit = { },
 ) {
-    var isMenuExpanded by remember { mutableStateOf(false) }
-    val handleDropdownItem = { action: () -> Unit ->
-        isMenuExpanded = false
-        action()
-    }
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .padding(8.dp)
-            .height(IntrinsicSize.Min)
-    ) {
+    Box(modifier.clickable(onClick = onItemClick)) {
         Row(
-            modifier = Modifier
-                .weight(1f)
-                .clickable(onClick = onItemClick),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = modifier
+                .padding(8.dp)
+                .height(IntrinsicSize.Min)
         ) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(color = MaterialTheme.colorScheme.surfaceContainerLow)
-                    .width(128.dp)
-                    .height(72.dp),
-            ) {
-                VideoThumbnailImage(download)
-                VideoThumbnailOverlay(download, Modifier.align(Alignment.BottomStart))
-            }
-            Spacer(Modifier.width(16.dp))
-            Column(
-                verticalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .weight(1f),
-            ) {
-                Text(
-                    text = download.caption ?: download.filename,
-                    modifier = Modifier.padding(start = 8.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    overflow = TextOverflow.Ellipsis,
-                    maxLines = 2,
-                )
-                Spacer(modifier.height(8.dp))
-                Author(download)
-            }
-        }
-        Spacer(Modifier.width(16.dp))
-        IconButton(
-            onClick = { isMenuExpanded = true },
-        ) {
-            Icon(
-                imageVector = Icons.Filled.MoreVert,
-                contentDescription = stringResource(R.string.more_actions),
-                modifier = Modifier
-                    .width(40.dp)
-                    .fillMaxHeight(),
+            VideoThumbnail(download)
+            VideoDescription(download, Modifier.weight(1f))
+            ActionsContextMenu(
+                onOpenOn = onOpenOn,
+                onDelete = onDelete,
+                onShare = onShare,
             )
-            DropdownMenu(
-                expanded = isMenuExpanded,
-                onDismissRequest = { isMenuExpanded = false }
-            ) {
-                DropdownMenuItem(
-                    text = {
-                        Text("Open on...")
-                    },
-                    onClick = {
-                        handleDropdownItem {
-                            onOpenOn()
-                        }
-                    }
-                )
-                DropdownMenuItem(
-                    text = {
-                        Text("Share")
-                    },
-                    onClick = {
-                        handleDropdownItem {
-                            onShare()
-                        }
-                    }
-                )
-                DropdownMenuItem(
-                    text = {
-                        Text("Delete")
-                    },
-                    onClick = {
-                        handleDropdownItem {
-                            onDelete()
-                        }
-                    }
-                )
-            }
         }
     }
 }
@@ -189,6 +114,83 @@ fun DownloadItemPreview() {
             download = DownloadMockData.forPreview[0],
             modifier = Modifier.fillMaxWidth(),
         )
+    }
+}
+
+@Composable
+fun ActionsContextMenu(
+    onOpenOn: () -> Unit = { },
+    onDelete: () -> Unit = { },
+    onShare: () -> Unit = { },
+) {
+    var isMenuExpanded by remember { mutableStateOf(false) }
+    val handleDropdownItem = { action: () -> Unit ->
+        isMenuExpanded = false
+        action()
+    }
+
+    IconButton(
+        onClick = { isMenuExpanded = true },
+    ) {
+        Icon(
+            imageVector = Icons.Filled.MoreVert,
+            contentDescription = stringResource(R.string.more_actions),
+            modifier = Modifier
+                .width(40.dp)
+                .fillMaxHeight(),
+        )
+        DropdownMenu(
+            expanded = isMenuExpanded,
+            onDismissRequest = { isMenuExpanded = false }
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Text("Open on...")
+                },
+                onClick = {
+                    handleDropdownItem {
+                        onOpenOn()
+                    }
+                }
+            )
+            DropdownMenuItem(
+                text = {
+                    Text("Share")
+                },
+                onClick = {
+                    handleDropdownItem {
+                        onShare()
+                    }
+                }
+            )
+            DropdownMenuItem(
+                text = {
+                    Text("Delete")
+                },
+                onClick = {
+                    handleDropdownItem {
+                        onDelete()
+                    }
+                }
+            )
+        }
+    }
+}
+
+@Composable
+fun VideoThumbnail(
+    download: DownloadEntity,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(color = MaterialTheme.colorScheme.surfaceContainerLow)
+            .width(128.dp)
+            .height(72.dp),
+    ) {
+        VideoThumbnailImage(download)
+        VideoThumbnailOverlay(download, Modifier.align(Alignment.BottomStart))
     }
 }
 
@@ -260,6 +262,27 @@ fun VideoThumbnailImage(
             .width(128.dp)
             .height(72.dp),
     )
+}
+
+@Composable
+fun VideoDescription(
+    download: DownloadEntity,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        verticalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier
+            .fillMaxHeight(),
+    ) {
+        Text(
+            text = download.caption ?: download.filename,
+            modifier = Modifier.padding(start = 8.dp),
+            style = MaterialTheme.typography.bodyMedium,
+            overflow = TextOverflow.Ellipsis,
+            maxLines = 2,
+        )
+        Author(download)
+    }
 }
 
 @Composable

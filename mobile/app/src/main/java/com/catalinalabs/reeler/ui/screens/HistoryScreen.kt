@@ -1,7 +1,9 @@
 package com.catalinalabs.reeler.ui.screens
 
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -70,10 +72,9 @@ fun HistoryScreen(
                 onOpenOn = { onOpenOn(download) },
                 onShare = { onShare(download) },
                 onDelete = { onDelete(download) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
             )
+            Spacer(Modifier.height(16.dp))
             if ((index + 1) % 5 == 0) {
                 AdBanner(
                     size = AdBannerSize.Small,
