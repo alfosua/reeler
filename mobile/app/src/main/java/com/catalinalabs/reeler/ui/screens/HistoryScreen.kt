@@ -62,6 +62,14 @@ fun HistoryScreen(
 ) {
     LazyColumn(modifier.padding(top = 32.dp)) {
         itemsIndexed(downloads) { index, download ->
+            if (index == 0) {
+                AdBanner(
+                    size = AdBannerSize.Small,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                )
+            }
             DownloadItem(
                 download = download,
                 onItemClick = {
