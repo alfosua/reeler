@@ -5,6 +5,7 @@ import { fetchTwitterVideoInfo } from './twitter'
 export function getFetcherByHostname(hostname: string) {
   switch (hostname) {
     case 'www.tiktok.com':
+    case 'vm.tiktok.com':
     case 'tiktok.com': {
       return fetchTiktokVideoInfo
     }
