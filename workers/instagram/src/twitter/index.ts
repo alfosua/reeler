@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import { getFilenameByTimestamp } from '../utils'
 
 export async function fetchTwitterVideoInfo(url: string) {
   const apiUrl = new URL('https://twitsave.com/info')
@@ -13,14 +14,15 @@ export async function fetchTwitterVideoInfo(url: string) {
 
   const description = $('.leading-tight p.m-2').first().text()
 
-  const twitterVideoInfo = {
-    contentUrl: videoUrl,
+  const result: VideoInfo = {
+    filename: getFilenameByTimestamp('mp4'),
+    contentUrl: videoUrl || '',
     source: 'twitter',
     sourceUrl: url,
-    description,
-    slug: stringToSlug(description),
+    caption: description,
   }
-  return twitterVideoInfo
+
+  return result
 }
 
 function stringToSlug(s: string) {

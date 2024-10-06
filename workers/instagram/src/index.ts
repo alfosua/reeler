@@ -1,13 +1,10 @@
 import { Hono } from 'hono'
 import { HTTPException } from 'hono/http-exception'
-import { fetchVideoInfo } from './instagram'
-import { fetchTwitterVideoInfo } from './twitter'
+import { getFetcherByHostname } from './fetchers'
 
 const app = new Hono()
 
 app.get('/video-info', async (c) => {
-  const requestUrl = new URL(c.req.url)
-
   let url
   try {
     url = new URL(c.req.query('url')!)
@@ -18,35 +15,10 @@ app.get('/video-info', async (c) => {
   }
 
   const href = url.href
+  const fetchVideoInfo = getFetcherByHostname(url.hostname)
+  const videoInfo = await fetchVideoInfo(href)
 
-  switch (url.hostname) {
-    case 'www.instagram.com':
-    case 'instagram.com': {
-      const result = await fetchVideoInfo(href)
-      const contentUrl = new URL(
-        `/video-download/${btoa(result.contentUrl)}.mp4`,
-        requestUrl,
-      )
-      return c.json({
-        ...result,
-        contentUrl: contentUrl.href,
-        source: 'instagram',
-        sourceUrl: href,
-      })
-    }
-    case 'x.com':
-    case 'twitter.com': {
-      return c.json(await fetchTwitterVideoInfo(href))
-    }
-    default: {
-      c.status(400)
-      return c.json({
-        error: true,
-        message: 'Not supported',
-        code: 'NOT_SUPPORTED',
-      })
-    }
-  }
+  return c.json(videoInfo)
 })
 
 app.get('/video-download/:key', async (c) => {

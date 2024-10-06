@@ -1,15 +1,22 @@
+import { getFilenameByTimestamp } from '../utils'
 import { getPostGraphqlData, MediaData } from './api'
 
-export async function fetchVideoInfo(url: string) {
+export async function fetchInstagramVideoInfo(url: string) {
   const postId = getPostIdFromUrl(url)
 
   if (!postId) {
     throw new Error('Instagram post ID not found.')
   }
 
-  const videoInfo = await getVideoInfo(postId)
+  const metadata = await getVideoJSONFromGraphQL(postId)
+  const result: VideoInfo = {
+    filename: getFilenameByTimestamp('mp4'),
+    source: 'instagram',
+    sourceUrl: url,
+    ...metadata,
+  }
 
-  return videoInfo
+  return result
 }
 
 function getPostIdFromUrl(postUrl: string) {
@@ -21,22 +28,13 @@ function getPostIdFromUrl(postUrl: string) {
   return postUrl.match(postRegex)?.at(-1) || postUrl.match(reelRegex)?.at(-1)
 }
 
-async function getVideoInfo(postId: string) {
-  let videoInfo: VideoInfo | null = null
-
-  videoInfo = await getVideoJSONFromGraphQL(postId)
-  if (videoInfo) return videoInfo
-
-  throw new Error('Video link for this post is not public.')
-}
-
 async function getVideoJSONFromGraphQL(postId: string) {
   const data = await getPostGraphqlData({ postId })
 
   const mediaData = data.data?.xdt_shortcode_media
 
   if (!mediaData) {
-    return null
+    throw new Error('Video link for this post is not public.')
   }
 
   if (!mediaData.is_video) {
@@ -47,36 +45,16 @@ async function getVideoJSONFromGraphQL(postId: string) {
   return videoInfo
 }
 
-const formatGraphqlJson = (data: MediaData) => {
-  const filename = getIGVideoFileName()
-  const width = data.dimensions.width
-  const height = data.dimensions.height
-  const username = data.owner.username
-  const caption = data.edge_media_to_caption.edges[0].node?.text.split('\n')[0]
-  const duration = data.video_duration
-  const userAvatarUrl = data.owner.profile_pic_url
-  const thumbnailUrl = data.thumbnail_src
-  const contentUrl = data.video_url
-
-  const videoJson: VideoInfo = {
-    filename,
-    contentUrl,
-    width,
-    height,
-    username,
-    caption,
-    duration,
-    userAvatarUrl,
-    thumbnailUrl,
+function formatGraphqlJson(data: MediaData) {
+  return {
+    width: data.dimensions.width,
+    height: data.dimensions.height,
+    username: data.owner.username,
+    caption: data.edge_media_to_caption.edges[0].node?.text.split('\n')[0],
+    duration: data.video_duration,
+    userAvatarUrl: data.owner.profile_pic_url,
+    thumbnailUrl: data.thumbnail_src,
+    contentUrl: data.video_url,
     raw: data,
   }
-
-  return videoJson
-}
-
-const getIGVideoFileName = () => getTimedFilename('ig-downloader', 'mp4')
-
-const getTimedFilename = (name: string, ext: string) => {
-  const timeStamp = Math.floor(Date.now() / 1000)
-  return `${name}-${timeStamp}.${ext}`
 }

@@ -1,6 +1,8 @@
 type VideoInfo = {
   filename: string
   contentUrl: string
+  source: string
+  sourceUrl: string
   width?: number
   height?: number
   username?: string
