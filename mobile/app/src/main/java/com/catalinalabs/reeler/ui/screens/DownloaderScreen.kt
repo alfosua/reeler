@@ -3,6 +3,7 @@ package com.catalinalabs.reeler.ui.screens
 import android.app.Activity
 import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -113,7 +114,7 @@ fun DownloaderScreen(
         }
     }
 
-    Column(modifier) {
+    Column(modifier = modifier) {
         DownloadField(
             videoUrl = sourceUrl,
             onVideoUrlChange = onVideoUrlChange,
@@ -141,7 +142,9 @@ fun DownloaderScreen(
         }
         DownloadProcessStatusTracker(
             status,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f),
         )
     }
 }
@@ -168,7 +171,7 @@ fun DownloadField(
     onDownloadButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier.padding(8.dp)) {
+    Row(modifier = modifier.padding(8.dp)) {
         OutlinedTextField(
             value = videoUrl,
             onValueChange = onVideoUrlChange,
@@ -229,61 +232,65 @@ fun DownloadProcessStatusTracker(
     modifier: Modifier = Modifier,
     successContent: @Composable () -> Unit = { },
 ) {
-    Column(
-        modifier = modifier.padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        when (status) {
-            is DownloadProcessStatus.Processing -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(40.dp),
-                )
-                Text(
-                    text = stringResource(R.string.processing_video_information),
-                )
-            }
+    Box(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .padding(32.dp)
+                .align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            when (status) {
+                is DownloadProcessStatus.Processing -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(40.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.processing_video_information),
+                    )
+                }
 
-            is DownloadProcessStatus.ProcessingSuccess -> {
-                Icon(
-                    imageVector = Icons.Rounded.VideoLibrary,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                )
-                Text(
-                    text = stringResource(R.string.your_video_was_processed_successfully),
-                )
-                successContent()
-            }
+                is DownloadProcessStatus.ProcessingSuccess -> {
+                    Icon(
+                        imageVector = Icons.Rounded.VideoLibrary,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.your_video_was_processed_successfully),
+                    )
+                    successContent()
+                }
 
-            is DownloadProcessStatus.Downloading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(40.dp),
-                )
-                Text(
-                    text = stringResource(R.string.download_in_progress),
-                )
-            }
+                is DownloadProcessStatus.Downloading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(40.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.download_in_progress),
+                    )
+                }
 
-            is DownloadProcessStatus.DownloadSuccess -> {
-                Icon(
-                    imageVector = Icons.Rounded.FileDownloadDone,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                )
-                Text(text = stringResource(R.string.video_downloaded_successfully))
-            }
+                is DownloadProcessStatus.DownloadSuccess -> {
+                    Icon(
+                        imageVector = Icons.Rounded.FileDownloadDone,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                    )
+                    Text(text = stringResource(R.string.video_downloaded_successfully))
+                }
 
-            is DownloadProcessStatus.Error -> {
-                Icon(
-                    imageVector = Icons.Rounded.ErrorOutline,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                )
-                Text(
-                    text = stringResource(R.string.something_went_wrong),
-                    textAlign = TextAlign.Center,
-                )
+                is DownloadProcessStatus.Error -> {
+                    Icon(
+                        imageVector = Icons.Rounded.ErrorOutline,
+                        contentDescription = null,
+                        modifier = Modifier.size(40.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.something_went_wrong),
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
     }
