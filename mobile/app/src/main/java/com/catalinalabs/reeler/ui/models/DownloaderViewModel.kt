@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.catalinalabs.reeler.data.DownloadEntity
 import com.catalinalabs.reeler.data.DownloadRepository
+import com.catalinalabs.reeler.data.asVideoInfoOutput
 import com.catalinalabs.reeler.network.VideoDataFetcher
 import com.catalinalabs.reeler.network.WorkerApiService
 import com.catalinalabs.reeler.network.models.VideoInfoOutput
@@ -16,6 +17,7 @@ import com.catalinalabs.reeler.services.ReelerAdsService
 import com.catalinalabs.reeler.services.ReelerMediaService
 import com.catalinalabs.reeler.services.ReelerNotificationsService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import javax.inject.Inject
@@ -29,9 +31,11 @@ class DownloaderViewModel @Inject constructor(
     private val videoFetcher: VideoDataFetcher,
     private val ads: ReelerAdsService,
 ) : ViewModel() {
-    var videoInfo: VideoInfoOutput? by mutableStateOf(null)
+    var download: DownloadEntity? by mutableStateOf(null)
         private set
     var sourceUrl by mutableStateOf("")
+        private set
+    var alreadyHandledSendAction by mutableStateOf(false)
         private set
     var status: DownloadProcessStatus by mutableStateOf(DownloadProcessStatus.Idle)
         private set
@@ -44,11 +48,19 @@ class DownloaderViewModel @Inject constructor(
         }
     }
 
+    fun markAsAlreadyHandleSendAction() {
+        alreadyHandledSendAction = true
+    }
+
     fun updateSourceUrl(url: String) {
         sourceUrl = url
     }
 
-    private fun updateStatus(newStatus: DownloadProcessStatus) {
+    fun updateDownload(newDownload: DownloadEntity?) {
+        download = newDownload
+    }
+
+    fun updateStatus(newStatus: DownloadProcessStatus) {
         status = newStatus
     }
 
@@ -56,12 +68,14 @@ class DownloaderViewModel @Inject constructor(
         try {
             updateStatus(DownloadProcessStatus.Processing)
             Log.d(::DownloaderViewModel.name, "Processing video info for URL: $sourceUrl")
-            videoInfo = workerApi.getVideoInfo(sourceUrl)
+            val videoInfo = workerApi.getVideoInfo(sourceUrl)
+            updateDownload(videoInfo.asEntity())
             Log.d(
                 ::DownloaderViewModel.name,
                 "Successfully processed video info from URL \"$sourceUrl\": $videoInfo"
             )
             updateStatus(DownloadProcessStatus.ProcessingSuccess)
+            updateSourceUrl("")
         } catch (e: Exception) {
             Log.e(::DownloaderViewModel.name, "Failed to process video info: $e")
             updateStatus(DownloadProcessStatus.Error(e.message ?: "Unknown error", "processing"))
@@ -70,21 +84,23 @@ class DownloaderViewModel @Inject constructor(
 
     private suspend fun workOnVideoDownload() {
         try {
-            val videoInfo = videoInfo
+            val videoInfo = download?.asVideoInfoOutput()
+                ?: throw Exception("No video info available")
             updateStatus(DownloadProcessStatus.Downloading)
-            if (videoInfo == null) {
-                throw Exception("No video info available")
-            }
             Log.d(::DownloaderViewModel.name, "Starting download of video")
+
             val data = videoFetcher.getVideoData(videoInfo.contentUrl)
-            val mediaUri = media.saveVideo(data, videoInfo)
+            val filePath = media.saveVideo(data, videoInfo)
             Log.d(
                 ::DownloaderViewModel.name,
                 "Download of video \"${videoInfo.filename}\" completed successfully"
             )
+
             val timestamp = Calendar.getInstance().time.time
             val download =
-                saveVideoDataIntoDatabase(videoInfo, mediaUri, timestamp, data.size.toLong())
+                saveVideoDataIntoDatabase(videoInfo, filePath, timestamp, data.size.toLong())
+
+            updateDownload(download)
             notifications.showDownloadCompletion(timestamp.toInt(), download)
             updateStatus(DownloadProcessStatus.DownloadSuccess)
         } catch (e: Exception) {
@@ -101,25 +117,26 @@ class DownloaderViewModel @Inject constructor(
         size: Long,
     ): DownloadEntity {
         val entity = videoInfo.asEntity(
-            mediaUri = filePath,
+            filePath = filePath,
             timestamp = timestamp,
             size = size,
         )
         Log.d(::DownloaderViewModel.name, "Inserting download record into database: $entity")
-        repository.insertDownload(entity)
-        return entity
+        val id = repository.insertDownload(entity)
+        val newEntity = repository.getDownloadStream(id.toInt()).first()
+        return newEntity!!
     }
 }
 
 private fun VideoInfoOutput.asEntity(
-    id: Int = 0,
-    mediaUri: String? = null,
+    id: Long = 0,
+    filePath: String? = null,
     timestamp: Long? = null,
     size: Long = 0,
 ): DownloadEntity {
     return DownloadEntity(
         id = id,
-        mediaUri = mediaUri,
+        filePath = filePath,
         timestamp = timestamp,
         filename = this.filename,
         contentUrl = this.contentUrl,

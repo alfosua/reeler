@@ -73,8 +73,8 @@ fun HistoryScreen(
             DownloadItem(
                 download = download,
                 onItemClick = {
-                    if (download.mediaUri != null) {
-                        navigateToVideoPlayer(download.mediaUri)
+                    if (download.filePath != null) {
+                        navigateToVideoPlayer(download.filePath)
                     }
                 },
                 onOpenOn = { onOpenOn(download) },

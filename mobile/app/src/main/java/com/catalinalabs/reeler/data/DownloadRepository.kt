@@ -7,7 +7,7 @@ interface DownloadRepository {
 
     fun getDownloadStream(id: Int): Flow<DownloadEntity?>
 
-    suspend fun insertDownload(item: DownloadEntity)
+    suspend fun insertDownload(item: DownloadEntity): Long
 
     suspend fun deleteDownload(item: DownloadEntity)
 

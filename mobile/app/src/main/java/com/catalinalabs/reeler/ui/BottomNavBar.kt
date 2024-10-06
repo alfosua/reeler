@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.toRoute
 import com.catalinalabs.reeler.R
@@ -46,7 +47,13 @@ fun BottomNavBar(
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
     val handleClick = { index: Int, item: NavBarItem ->
         selectedIndex = index
-        navController.navigate(item.route)
+        navController.navigate(item.route) {
+            popUpTo(navController.graph.findStartDestination().id) {
+                saveState = true
+            }
+            launchSingleTop = true
+            restoreState = true
+        }
     }
 
     LaunchedEffect(currentRoute) {
@@ -91,7 +98,7 @@ private fun NavBarIcon(
     index: Int,
 ) {
     BadgedBox(
-        badge ={
+        badge = {
             if (item.badgeCount != null) {
                 Badge {
                     Text(item.badgeCount.toString())

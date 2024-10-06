@@ -41,6 +41,7 @@ fun Router(
         composable<Routes.Home> {
             DownloaderScreen(
                 viewModel = hiltViewModel(),
+                actions = hiltViewModel(),
                 modifier = Modifier.fillMaxHeight(),
                 navigateToVideoPlayer = { uri ->
                     navController.navigate(Routes.VideoPlayer(uri))

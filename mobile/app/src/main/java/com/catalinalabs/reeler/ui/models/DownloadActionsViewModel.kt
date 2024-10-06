@@ -32,19 +32,19 @@ class DownloadActionsViewModel @Inject constructor(
     fun deleteItem(download: DownloadEntity) {
         viewModelScope.launch {
             repository.deleteDownload(download)
-            val mediaUri = media.getContentUriFromFilePath(download.mediaUri!!)
-            media.deleteFileFromMediaStore(mediaUri!!)
+            val filePath = media.getContentUriFromFilePath(download.filePath!!)
+            media.deleteFileFromMediaStore(filePath!!)
         }
     }
 
     fun shareItem(context: Context, download: DownloadEntity) {
-        val mediaUri =
-            ReelerMediaService(context).getContentUriFromFilePath(download.mediaUri!!)
+        val filePath =
+            ReelerMediaService(context).getContentUriFromFilePath(download.filePath!!)
         val shareIntent = Intent(Intent.ACTION_SEND).apply {
             type = "video/mp4"
             putExtra(
                 Intent.EXTRA_STREAM,
-                mediaUri,
+                filePath,
             )
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
