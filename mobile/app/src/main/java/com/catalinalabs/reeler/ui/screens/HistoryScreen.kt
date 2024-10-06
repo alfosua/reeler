@@ -60,9 +60,10 @@ fun HistoryScreen(
     onShare: (DownloadEntity) -> Unit,
     onDelete: (DownloadEntity) -> Unit,
 ) {
-    LazyColumn(modifier.padding(top = 32.dp)) {
+    LazyColumn(modifier) {
         itemsIndexed(downloads) { index, download ->
             if (index == 0) {
+                Spacer(Modifier.height(32.dp))
                 AdBanner(
                     size = AdBannerSize.Small,
                     modifier = Modifier
