@@ -5,7 +5,7 @@ import com.catalinalabs.reeler.data.DownloadRepository
 import com.catalinalabs.reeler.data.OfflineDownloadRepository
 import com.catalinalabs.reeler.data.ReelerDatabase
 import com.catalinalabs.reeler.network.KtorVideoDataFetcher
-import com.catalinalabs.reeler.network.KtorWorkerApiService
+import com.catalinalabs.reeler.network.ProxyWorkerApiService
 import com.catalinalabs.reeler.network.VideoDataFetcher
 import com.catalinalabs.reeler.network.WorkerApiService
 import com.catalinalabs.reeler.services.ReelerAdsService
@@ -53,6 +53,6 @@ object AppModule {
     @Provides
     @Singleton
     fun provideWorkerApiService(): WorkerApiService {
-        return KtorWorkerApiService()
+        return ProxyWorkerApiService()
     }
 }

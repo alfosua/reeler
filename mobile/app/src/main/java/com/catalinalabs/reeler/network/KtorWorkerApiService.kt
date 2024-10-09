@@ -10,7 +10,7 @@ import io.ktor.client.request.get
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 
-class KtorWorkerApiService: WorkerApiService {
+class KtorWorkerApiService : WorkerApiService {
     override suspend fun getVideoInfo(sourceUrl: String): VideoInfoOutput {
         val targetUrl = "https://instagram.alfosuag.workers.dev/video-info?url=$sourceUrl"
         Log.d(WorkerApiService.LOG_TAG, "Requesting video information at: $targetUrl")
@@ -26,3 +26,5 @@ class KtorWorkerApiService: WorkerApiService {
         return videoInfo
     }
 }
+
+
