@@ -1,6 +1,7 @@
 package com.catalinalabs.reeler.workers.youtube
 
 import com.catalinalabs.reeler.network.models.VideoInfoOutput
+import com.catalinalabs.reeler.workers.getFilenameByTimestamp
 import com.github.kiulian.downloader.YoutubeDownloader
 import com.github.kiulian.downloader.downloader.request.RequestVideoInfo
 import io.ktor.client.HttpClient
@@ -52,11 +53,6 @@ private fun extractVideoIdFromYoutubeUrl(url: String): String? {
     )
     val matchResult = pattern.find(url)
     return matchResult?.groupValues?.getOrNull(1)
-}
-
-private fun getFilenameByTimestamp(extension: String = "mp4"): String {
-    val timestamp = System.currentTimeMillis()
-    return "video_$timestamp.$extension"
 }
 
 private val json = Json {
