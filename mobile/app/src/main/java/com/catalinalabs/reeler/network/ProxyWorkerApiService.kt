@@ -4,6 +4,7 @@ import com.catalinalabs.reeler.network.models.VideoInfoOutput
 import com.catalinalabs.reeler.utils.RegexExtensions.contains
 import com.catalinalabs.reeler.workers.instagram.fetchInstagramVideoInfo
 import com.catalinalabs.reeler.workers.tiktok.fetchTiktokVideoInfo
+import com.catalinalabs.reeler.workers.twitter.fetchTwitterVideoInfo
 import com.catalinalabs.reeler.workers.youtube.fetchYoutubeVideoInfo
 import io.ktor.http.Url
 
@@ -21,6 +22,10 @@ class ProxyWorkerApiService : WorkerApiService {
 
             in Regex("(?:www\\.|m\\.)?(?:instagram\\.com|instagr\\.am)") -> {
                 ::fetchInstagramVideoInfo
+            }
+
+            in Regex("(?:www\\.|m\\.|)?(?:twitter\\.com|x\\.com)") -> {
+                ::fetchTwitterVideoInfo
             }
 
             else -> {
