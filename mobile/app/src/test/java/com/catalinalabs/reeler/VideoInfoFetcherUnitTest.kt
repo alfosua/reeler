@@ -1,6 +1,7 @@
 package com.catalinalabs.reeler
 
 import com.catalinalabs.reeler.workers.instagram.fetchInstagramVideoInfo
+import com.catalinalabs.reeler.workers.tiktok.fetchTiktokVideoInfo
 import com.catalinalabs.reeler.workers.youtube.fetchYoutubeVideoInfo
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
@@ -25,6 +26,15 @@ class VideoInfoFetcherUnitTest {
         val url = "https://www.instagram.com/reels/C_FPxueybUl/"
         val videoInfo = runBlocking {
             fetchInstagramVideoInfo(url)
+        }
+        println(videoInfo)
+    }
+
+    @Test
+    fun tiktok_fetchVideoInfo() {
+        val url = "https://www.tiktok.com/@.bestmode/video/7424109534500687136"
+        val videoInfo = runBlocking {
+            fetchTiktokVideoInfo(url)
         }
         println(videoInfo)
     }

@@ -31,16 +31,16 @@ suspend fun fetchYoutubeVideoInfo(url: String): VideoInfoOutput {
 
     val result = VideoInfoOutput(
         filename = getFilenameByTimestamp(),
+        contentUrl = format.url(),
         sourceUrl = url,
         source = "youtube",
-        contentUrl = format.url(),
-        caption = details.title(),
-        duration = details.lengthSeconds().toDouble(),
-        username = details.author(),
-        thumbnailUrl = details.thumbnails().firstOrNull(),
         width = format.width(),
         height = format.height(),
+        username = details.author(),
+        caption = details.title(),
+        duration = details.lengthSeconds().toDouble(),
         userAvatarUrl = authorAvatarUrl,
+        thumbnailUrl = details.thumbnails().firstOrNull(),
     )
 
     return result

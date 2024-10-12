@@ -9,7 +9,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.catalinalabs.reeler.data.DownloadEntity
 import com.catalinalabs.reeler.data.DownloadRepository
-import com.catalinalabs.reeler.data.asVideoInfoOutput
 import com.catalinalabs.reeler.network.VideoDataFetcher
 import com.catalinalabs.reeler.network.WorkerApiService
 import com.catalinalabs.reeler.network.models.VideoInfoOutput
@@ -42,9 +41,11 @@ class DownloaderViewModel @Inject constructor(
 
     fun startDownloadProcess(context: Context) {
         viewModelScope.launch {
-            workOnVideoProcessing()
-            ads.showInterstitial(context)
-            workOnVideoDownload()
+            val videoInfo = workOnVideoProcessing()
+            if (videoInfo != null) {
+                ads.showInterstitial(context)
+                workOnVideoDownload(videoInfo)
+            }
         }
     }
 
@@ -64,7 +65,7 @@ class DownloaderViewModel @Inject constructor(
         status = newStatus
     }
 
-    private suspend fun workOnVideoProcessing() {
+    private suspend fun workOnVideoProcessing(): VideoInfoOutput? {
         try {
             updateStatus(DownloadProcessStatus.Processing)
             Log.d(::DownloaderViewModel.name, "Processing video info for URL: $sourceUrl")
@@ -76,20 +77,20 @@ class DownloaderViewModel @Inject constructor(
             )
             updateStatus(DownloadProcessStatus.ProcessingSuccess)
             updateSourceUrl("")
+            return videoInfo
         } catch (e: Exception) {
             Log.e(::DownloaderViewModel.name, "Failed to process video info: $e")
             updateStatus(DownloadProcessStatus.Error(e.message ?: "Unknown error", "processing"))
+            return null
         }
     }
 
-    private suspend fun workOnVideoDownload() {
+    private suspend fun workOnVideoDownload(videoInfo: VideoInfoOutput) {
         try {
-            val videoInfo = download?.asVideoInfoOutput()
-                ?: throw Exception("No video info available")
             updateStatus(DownloadProcessStatus.Downloading)
             Log.d(::DownloaderViewModel.name, "Starting download of video")
 
-            val data = videoFetcher.getVideoData(videoInfo.contentUrl)
+            val data = videoFetcher.getVideoData(videoInfo)
             val filePath = media.saveVideo(data, videoInfo)
             Log.d(
                 ::DownloaderViewModel.name,

@@ -25,14 +25,14 @@ suspend fun fetchInstagramVideoInfo(url: String): VideoInfoOutput {
 
     val result = VideoInfoOutput(
         filename = getFilenameByTimestamp(),
-        source = "instagram",
+        contentUrl = media?.videoUrl ?: "",
         sourceUrl = url,
+        source = "instagram",
         width = media?.dimensions?.width,
         height = media?.dimensions?.height,
-        contentUrl = media?.videoUrl ?: "",
+        username = media?.owner?.username,
         caption = media?.edgeMediaToCaption?.edges?.getOrNull(0)?.node?.text,
         duration = media?.videoDuration,
-        username = media?.owner?.username,
         userAvatarUrl = media?.owner?.profilePicUrl,
         thumbnailUrl = media?.thumbnailSrc,
     )

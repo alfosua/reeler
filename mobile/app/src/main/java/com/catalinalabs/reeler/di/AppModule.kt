@@ -4,7 +4,7 @@ import android.app.Application
 import com.catalinalabs.reeler.data.DownloadRepository
 import com.catalinalabs.reeler.data.OfflineDownloadRepository
 import com.catalinalabs.reeler.data.ReelerDatabase
-import com.catalinalabs.reeler.network.KtorVideoDataFetcher
+import com.catalinalabs.reeler.network.ProxyVideoDataFetcher
 import com.catalinalabs.reeler.network.ProxyWorkerApiService
 import com.catalinalabs.reeler.network.VideoDataFetcher
 import com.catalinalabs.reeler.network.WorkerApiService
@@ -47,7 +47,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideVideoDataFetcher(): VideoDataFetcher {
-        return KtorVideoDataFetcher()
+        return ProxyVideoDataFetcher()
     }
 
     @Provides

@@ -15,4 +15,5 @@ data class VideoInfoOutput(
     val duration: Double? = null,
     val userAvatarUrl: String? = null,
     val thumbnailUrl: String? = null,
+    val cookie: String? = null,
 )
