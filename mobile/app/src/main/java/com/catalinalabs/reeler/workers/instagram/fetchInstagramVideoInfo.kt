@@ -6,22 +6,24 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.accept
+import io.ktor.client.plugins.cookies.get
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.http.userAgent
+import io.ktor.http.HttpHeaders
+import io.ktor.http.setCookie
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.util.StringValues
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-
 suspend fun fetchInstagramVideoInfo(url: String): VideoInfoOutput {
-    val shortCode = extractShortCodeFromUrl(url)
-    val rawData = fetchRawData(shortCode!!)
-    val media = rawData.graphql?.shortcodeMedia
+    val postIds = getPostIdentityFromUrl(url)
+    val rawData = fetchRawData(postIds)
+    val media = rawData.data?.xdtShortcodeMedia
+    val caption = media?.edgeMediaToCaption?.edges
+        ?.getOrNull(0)?.node?.text
+        ?.split('\n')?.get(0)
 
     val result = VideoInfoOutput(
         filename = getFilenameByTimestamp(),
@@ -31,7 +33,7 @@ suspend fun fetchInstagramVideoInfo(url: String): VideoInfoOutput {
         width = media?.dimensions?.width,
         height = media?.dimensions?.height,
         username = media?.owner?.username,
-        caption = media?.edgeMediaToCaption?.edges?.getOrNull(0)?.node?.text,
+        caption = caption,
         duration = media?.videoDuration,
         userAvatarUrl = media?.owner?.profilePicUrl,
         thumbnailUrl = media?.thumbnailSrc,
@@ -40,91 +42,178 @@ suspend fun fetchInstagramVideoInfo(url: String): VideoInfoOutput {
     return result
 }
 
+private data class PostIdentity(
+    val shortCode: String,
+    val pk: Long,
+    val url: String,
+)
+
+private fun getPostIdentityFromUrl(url: String): PostIdentity {
+    val shortCode = extractShortCodeFromUrl(url)
+        ?: throw IllegalArgumentException("Invalid URL")
+    val pk = getPkFromShortCode(shortCode)
+    return PostIdentity(shortCode, pk, url)
+}
+
 private fun extractShortCodeFromUrl(url: String): String? {
     val pattern = Regex(
         pattern = "^(?:https?://)?(?:www\\.|m\\.)?(?:instagram\\.com|instagr\\.am)/" +
-                "(?:p|reels|tv)/([a-zA-Z0-9_-]+)(?:/.*)?(?:\\?.*)?\$"
+                "(?:p|reels|reel|tv)/([a-zA-Z0-9_-]+)(?:/.*)?(?:\\?.*)?\$"
     )
     val matchResult = pattern.find(url)
     return matchResult?.groupValues?.getOrNull(1)
 }
 
-private const val USER_AGENT =
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
+private fun getPkFromShortCode(shortCode: String): Long {
+    return decodeBaseN(shortCode.take(11), table = SHORTCODE_CHARSET)
+}
 
-private suspend fun fetchRawData(shortCode: String): RawData {
-    val url = "https://www.instagram.com/p/$shortCode/?__a=1&__d=dis"
-    val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-            })
-        }
+fun decodeBaseN(string: String, n: Int? = null, table: String? = null): Long {
+    val charset = baseNTable(n, table)
+    val lookupTable = charset.withIndex().associate { it.value to it.index }
+    var result = 0L
+    val base = charset.length
+    for (char in string) {
+        result = result * base + (lookupTable[char] ?: error("Invalid character: $char"))
     }
-    val response = client.get(url) {
-        headers {
-            contentType(ContentType.Application.Json)
-            accept(ContentType.Application.Json)
-            userAgent(USER_AGENT)
-        }
-    }
-    val result: RawData = response.body()
     return result
 }
 
+fun baseNTable(n: Int?, table: String?): String {
+    if (table == null && n == null) {
+        throw IllegalArgumentException("Either table or n must be specified")
+    }
+    val baseTable =
+        (table ?: "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ").take(
+            n ?: table!!.length
+        )
+
+    if (n != null && n != baseTable.length) {
+        throw IllegalArgumentException("base $n exceeds table length ${baseTable.length}")
+    }
+    return baseTable
+}
+
+private const val SHORTCODE_CHARSET =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"
+
+val json = Json {
+    ignoreUnknownKeys = true
+}
+
+private suspend fun fetchRawData(post: PostIdentity): RawData {
+    val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(json)
+        }
+    }
+    val checkUrl = "$API_URL/web/get_ruling_for_content/?content_type=MEDIA&target_id=${post.pk}"
+    val checkResponse = client.get(checkUrl) {
+        headers {
+            appendAll(apiBaseHeaders)
+        }
+    }
+    val csrfToken = checkResponse.setCookie()["csrftoken"]?.value
+    val variables = GraphqlVariables(post.shortCode, 3, 40, 24, true)
+    val variablesJson = json.encodeToString(GraphqlVariables.serializer(), variables)
+    val graphqlResponse = client.get(GRAPHQL_QUERY_URL) {
+        url {
+            parameters.append("doc_id", "8845758582119845")
+            parameters.append("variables", variablesJson)
+        }
+        headers {
+            appendAll(apiBaseHeaders)
+            append("X-CSRFToken", csrfToken ?: "")
+            append("X-Requested-With", "XMLHttpRequest")
+            append("Referer", post.url)
+        }
+    }
+    val result: RawData = graphqlResponse.body()
+    return result
+}
+
+private const val BASE_URL = "https://www.instagram.com"
+private const val GRAPHQL_QUERY_URL = "https://www.instagram.com/graphql/query"
+private const val API_URL = "https://i.instagram.com/api/v1"
+
+private val apiBaseHeaders = StringValues.build {
+    append(HttpHeaders.Origin, "https://www.instagram.com")
+    append(HttpHeaders.Accept, "*/*")
+    append("X-IG-WWW-Claim", "0")
+    append("X-IG-App-ID", "936619743392459")
+    append("X-ASBD-ID", "198387")
+}
+
+@Serializable
+private data class GraphqlVariables(
+    val shortcode: String,
+    @SerialName("child_comment_count")
+    val childCommentCount: Int,
+    @SerialName("fetch_comment_count")
+    val fetchCommentCount: Int,
+    @SerialName("parent_comment_count")
+    val parentCommentCount: Int,
+    @SerialName("has_threaded_comments")
+    val hasThreadedComments: Boolean,
+)
+
+private const val USER_AGENT =
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36"
+
 @Serializable
 private data class RawData(
-    val graphql: Graphql?,
+    val data: GraphqlData? = null,
+    val status: String? = null,
 )
 
 @Serializable
-private data class Graphql(
-    @SerialName("shortcode_media")
-    val shortcodeMedia: ShortcodeMedia?,
+private data class GraphqlData(
+    @SerialName("xdt_shortcode_media")
+    val xdtShortcodeMedia: XdtShortcodeMedia? = null,
 )
 
 @Serializable
-private data class ShortcodeMedia(
+private data class XdtShortcodeMedia(
     @SerialName("video_url")
-    val videoUrl: String?,
+    val videoUrl: String? = null,
     @SerialName("is_video")
-    val isVideo: Boolean?,
+    val isVideo: Boolean? = null,
     @SerialName("display_url")
-    val displayUrl: String?,
-    val owner: Owner?,
-    val dimensions: Dimensions?,
+    val displayUrl: String? = null,
+    val owner: Owner? = null,
+    val dimensions: Dimensions? = null,
     @SerialName("video_duration")
-    val videoDuration: Double?,
+    val videoDuration: Double? = null,
     @SerialName("edge_media_to_caption")
-    val edgeMediaToCaption: Caption?,
+    val edgeMediaToCaption: Caption? = null,
     @SerialName("thumbnail_src")
-    val thumbnailSrc: String?,
+    val thumbnailSrc: String? = null,
 )
 
 @Serializable
 private data class Dimensions(
-    val height: Int?,
-    val width: Int?,
+    val height: Int? = null,
+    val width: Int? = null,
 )
 
 @Serializable
 private data class Owner(
-    val username: String?,
+    val username: String? = null,
     @SerialName("profile_pic_url")
-    val profilePicUrl: String?,
+    val profilePicUrl: String? = null,
 )
 
 @Serializable
 private data class Caption(
-    val edges: List<Edge>?,
+    val edges: List<Edge>? = null,
 )
 
 @Serializable
 private data class Edge(
-    val node: Node?,
+    val node: Node? = null,
 )
 
 @Serializable
 private data class Node(
-    val text: String?,
+    val text: String? = null,
 )
