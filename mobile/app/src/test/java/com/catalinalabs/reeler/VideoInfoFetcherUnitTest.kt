@@ -22,6 +22,15 @@ class VideoInfoFetcherUnitTest {
     }
 
     @Test
+    fun youtube_fetchVideoInfo_shorts() {
+        val url = "https://www.youtube.com/shorts/b5dHKC8wUdc"
+        val videoInfo = runBlocking {
+            fetchYoutubeVideoInfo(url)
+        }
+        println(videoInfo)
+    }
+
+    @Test
     fun instagram_fetchVideoInfo() {
         val url = "https://www.instagram.com/reels/C_FPxueybUl/"
         val videoInfo = runBlocking {

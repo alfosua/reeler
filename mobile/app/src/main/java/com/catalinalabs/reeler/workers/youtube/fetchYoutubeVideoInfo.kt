@@ -49,7 +49,7 @@ suspend fun fetchYoutubeVideoInfo(url: String): VideoInfoOutput {
 private fun extractVideoIdFromYoutubeUrl(url: String): String? {
     val pattern = Regex(
         pattern = "^(?:https?://)?(?:www\\.|m\\.)?(?:youtube\\.com|youtu\\.be)/" +
-                "(?:watch\\?v=|embed/|v/|shorts/)?([a-zA-Z0-9_-]{11})(?:&.+)?\$"
+                "(?:watch\\?v=|embed/|v/|shorts/)?([a-zA-Z0-9_-]{11})(?:&.+|\\?.+)?\$"
     )
     val matchResult = pattern.find(url)
     return matchResult?.groupValues?.getOrNull(1)
