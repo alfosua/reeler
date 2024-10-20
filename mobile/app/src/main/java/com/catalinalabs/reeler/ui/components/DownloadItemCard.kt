@@ -48,15 +48,15 @@ import androidx.compose.ui.unit.dp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.catalinalabs.reeler.R
-import com.catalinalabs.reeler.data.DownloadEntity
-import com.catalinalabs.reeler.data.DownloadMockData
+import com.catalinalabs.reeler.data.schema.DownloadLog
+import com.catalinalabs.reeler.data.testing.DownloadMockData
 import com.catalinalabs.reeler.ui.models.DownloadActionsViewModel
 import com.catalinalabs.reeler.ui.theme.ReelerTheme
 import java.util.Locale
 
 @Composable
 fun DownloadItem(
-    download: DownloadEntity,
+    download: DownloadLog,
     viewModel: DownloadActionsViewModel,
     modifier: Modifier = Modifier,
     onItemClick: () -> Unit = { },
@@ -80,7 +80,7 @@ fun DownloadItem(
 
 @Composable
 fun DownloadItem(
-    download: DownloadEntity,
+    download: DownloadLog,
     modifier: Modifier = Modifier,
     onItemClick: () -> Unit = { },
     onOpenOn: () -> Unit = { },
@@ -179,7 +179,7 @@ fun ActionsContextMenu(
 
 @Composable
 fun VideoThumbnail(
-    download: DownloadEntity,
+    download: DownloadLog,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -196,10 +196,10 @@ fun VideoThumbnail(
 
 @Composable
 fun VideoThumbnailOverlay(
-    download: DownloadEntity,
+    download: DownloadLog,
     modifier: Modifier = Modifier,
 ) {
-    val timeText = download.duration?.let {
+    val timeText = download.info?.duration?.let {
         val minutes = it.toInt() / 60
         val seconds = it.toInt() % 60
         String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
@@ -226,7 +226,7 @@ fun VideoThumbnailOverlay(
 
 @Composable
 fun VideoThumbnailImage(
-    download: DownloadEntity,
+    download: DownloadLog,
     modifier: Modifier = Modifier,
 ) {
     if (LocalInspectionMode.current) {
@@ -243,7 +243,7 @@ fun VideoThumbnailImage(
 
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(context)
-            .data(download.thumbnailUrl)
+            .data(download.info?.thumbnailUrl)
             .crossfade(true)
             .build(),
         loading = {
@@ -266,7 +266,7 @@ fun VideoThumbnailImage(
 
 @Composable
 fun VideoDescription(
-    download: DownloadEntity,
+    download: DownloadLog,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -275,7 +275,7 @@ fun VideoDescription(
             .fillMaxHeight(),
     ) {
         Text(
-            text = download.caption ?: download.filename,
+            text = download.info?.caption ?: download.info?.file?.filename ?: "",
             modifier = Modifier.padding(start = 8.dp),
             style = MaterialTheme.typography.bodyMedium,
             overflow = TextOverflow.Ellipsis,
@@ -287,7 +287,7 @@ fun VideoDescription(
 
 @Composable
 fun Author(
-    download: DownloadEntity,
+    download: DownloadLog,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -304,7 +304,7 @@ fun Author(
         }
         Spacer(Modifier.width(4.dp))
         Text(
-            text = "@${download.username}",
+            text = download.info?.author?.name ?: "",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 8.dp),
@@ -316,7 +316,7 @@ fun Author(
 
 @Composable
 fun AuthorImage(
-    download: DownloadEntity,
+    download: DownloadLog,
     modifier: Modifier = Modifier,
 ) {
     if (LocalInspectionMode.current) {
@@ -333,7 +333,7 @@ fun AuthorImage(
 
     SubcomposeAsyncImage(
         model = ImageRequest.Builder(context)
-            .data(download.userAvatarUrl)
+            .data(download.info?.author?.avatarUrl)
             .crossfade(true)
             .build(),
         loading = {

@@ -4,6 +4,7 @@ import android.content.ContentUris
 import android.os.Build
 import android.provider.MediaStore
 import android.util.Log
+import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,11 +37,12 @@ fun VideoPlayer(
     val context = LocalContext.current
     val contentResolver = context.contentResolver
     val exoPlayer = ExoPlayer.Builder(context).build()
-    
+
     LaunchedEffect(filePath) {
         val contentUri = when {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
                 MediaStore.Downloads.EXTERNAL_CONTENT_URI
+
             else -> MediaStore.Video.Media.EXTERNAL_CONTENT_URI
         }
 
@@ -73,7 +75,7 @@ fun VideoPlayer(
                     prepare()
                 }
             } else {
-                TODO("Handle case where file is not found in MediaStore")
+                Toast.makeText(context, "File not found", Toast.LENGTH_SHORT).show()
             }
         }
     }

@@ -1,6 +1,6 @@
 package com.catalinalabs.reeler.workers.tiktok
 
-import com.catalinalabs.reeler.network.models.VideoInfoOutput
+import com.catalinalabs.reeler.workers.MediaDownloadableExtraction
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -12,20 +12,20 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.userAgent
 
-suspend fun fetchTiktokVideoData(info: VideoInfoOutput): ByteArray {
+suspend fun fetchTiktokVideoData(info: MediaDownloadableExtraction): ByteArray {
     val client = HttpClient(CIO) {
         install(HttpTimeout) {
             requestTimeoutMillis = 3600000
         }
     }
-    val response = client.get(info.contentUrl) {
+    val response = client.get(info.url) {
         headers {
             userAgent(USER_AGENT)
             accept(ContentType.parse(ACCEPT))
             append(HttpHeaders.AcceptEncoding, ACCEPT_ENCODING)
             append(HttpHeaders.AcceptLanguage, ACCEPT_LANGUAGE)
             append("Sec-Fetch-Mode", SEC_FETCH_MODE)
-            append("Referer", info.sourceUrl)
+            append("Referer", info.referer ?: "")
             if (info.cookie != null) {
                 append(HttpHeaders.Cookie, info.cookie)
             }

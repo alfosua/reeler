@@ -10,7 +10,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.catalinalabs.reeler.MainActivity
 import com.catalinalabs.reeler.R
-import com.catalinalabs.reeler.data.DownloadEntity
+import com.catalinalabs.reeler.data.schema.DownloadLog
 import com.catalinalabs.reeler.utils.toFileSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -26,8 +26,9 @@ class ReelerNotificationsService(
     private val notificationManager =
         context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    suspend fun showDownloadCompletion(id: Int, download: DownloadEntity) = coroutineScope {
-        val largeIcon = async { download.thumbnailUrl?.let { loadBitmapFromUrl(it) } }.await()
+    suspend fun showDownloadCompletion(id: Int, download: DownloadLog) = coroutineScope {
+        val largeIcon =
+            async { download.info?.thumbnailUrl?.let { loadBitmapFromUrl(it) } }.await()
         val activityIntent = Intent(context, MainActivity::class.java)
         val activityPendingIntent = PendingIntent.getActivity(
             context,
@@ -37,8 +38,8 @@ class ReelerNotificationsService(
         )
         val notification = NotificationCompat.Builder(context, DOWNLOADS_CHANNEL_ID)
             .setSmallIcon(R.drawable.baseline_download_24)
-            .setContentTitle(download.caption)
-            .setContentText("Download complete • ${download.size.toFileSize()}")
+            .setContentTitle(download.info?.caption)
+            .setContentText("Download complete • ${download.info?.file?.contentLength?.toFileSize()}")
             .setContentIntent(activityPendingIntent)
             .setGroup(DOWNLOAD_TRACKER_GROUP_KEY)
             .setSilent(true)

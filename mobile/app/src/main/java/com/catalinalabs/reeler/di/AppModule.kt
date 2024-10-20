@@ -3,7 +3,7 @@ package com.catalinalabs.reeler.di
 import android.app.Application
 import com.catalinalabs.reeler.data.DownloadRepository
 import com.catalinalabs.reeler.data.OfflineDownloadRepository
-import com.catalinalabs.reeler.data.ReelerDatabase
+import com.catalinalabs.reeler.data.schema.Schema
 import com.catalinalabs.reeler.network.ProxyVideoDataFetcher
 import com.catalinalabs.reeler.network.ProxyWorkerApiService
 import com.catalinalabs.reeler.network.VideoDataFetcher
@@ -11,10 +11,13 @@ import com.catalinalabs.reeler.network.WorkerApiService
 import com.catalinalabs.reeler.services.ReelerAdsService
 import com.catalinalabs.reeler.services.ReelerMediaService
 import com.catalinalabs.reeler.services.ReelerNotificationsService
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import io.realm.kotlin.Realm
+import io.realm.kotlin.RealmConfiguration
 import javax.inject.Singleton
 
 @Module
@@ -22,8 +25,9 @@ import javax.inject.Singleton
 object AppModule {
     @Provides
     @Singleton
-    fun provideDownloadRepository(app: Application): DownloadRepository {
-        return OfflineDownloadRepository(ReelerDatabase.getDatabase(app).downloadDao())
+    fun provideRealm(): Realm {
+        val config = RealmConfiguration.create(schema = Schema)
+        return Realm.open(config)
     }
 
     @Provides
@@ -55,4 +59,12 @@ object AppModule {
     fun provideWorkerApiService(): WorkerApiService {
         return ProxyWorkerApiService()
     }
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+abstract class Repositories {
+    @Binds
+    @Singleton
+    abstract fun bindDownloadRepository(impl: OfflineDownloadRepository): DownloadRepository
 }

@@ -1,16 +1,17 @@
 package com.catalinalabs.reeler.data
 
+import com.catalinalabs.reeler.data.schema.DownloadLog
 import kotlinx.coroutines.flow.Flow
+import org.mongodb.kbson.BsonObjectId
 
 interface DownloadRepository {
-    fun getAllDownloadsStream(): Flow<List<DownloadEntity>>
+    fun flowAll(): Flow<List<DownloadLog>>
 
-    fun getDownloadStream(id: Int): Flow<DownloadEntity?>
+    fun flowOne(id: BsonObjectId): Flow<DownloadLog?>
 
-    suspend fun insertDownload(item: DownloadEntity): Long
+    suspend fun create(item: DownloadLog): DownloadLog
 
-    suspend fun deleteDownload(item: DownloadEntity)
+    suspend fun delete(item: DownloadLog)
 
-    suspend fun updateDownload(item: DownloadEntity)
+    suspend fun update(item: DownloadLog, action: DownloadLog.() -> Unit): DownloadLog
 }
-

@@ -4,6 +4,7 @@ plugins {
     kotlin("plugin.serialization") version "2.0.20"
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+    id("io.realm.kotlin")
 }
 
 android {
@@ -100,4 +101,10 @@ dependencies {
 
     implementation(libs.jsoup)
     implementation(libs.java.youtube.downloader)
+
+    implementation(libs.library.base)
+    // If using Device Sync
+    implementation(libs.library.sync)
+    // If using coroutines with the SDK
+    implementation(libs.kotlinx.coroutines.core)
 }

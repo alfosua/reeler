@@ -1,7 +1,10 @@
 package com.catalinalabs.reeler.workers.twitter
 
-import com.catalinalabs.reeler.network.models.VideoInfoOutput
-import com.catalinalabs.reeler.workers.getFilenameByTimestamp
+import com.catalinalabs.reeler.workers.AuthorExtraction
+import com.catalinalabs.reeler.workers.MediaDownloadableExtraction
+import com.catalinalabs.reeler.workers.MediaInfoExtraction
+import com.catalinalabs.reeler.workers.MediaType
+import com.catalinalabs.reeler.workers.getFilenameForMedia
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -10,6 +13,7 @@ import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
+import io.ktor.http.ContentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -17,7 +21,7 @@ import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
-suspend fun fetchTwitterVideoInfo(url: String): VideoInfoOutput {
+suspend fun fetchTwitterVideoInfo(url: String): MediaInfoExtraction {
     val postIds = getPostIdentityFromUrl(url)
     val rawData = fetchRawData(postIds)
     val root = rawData.data?.tweetResult?.result
@@ -28,23 +32,34 @@ suspend fun fetchTwitterVideoInfo(url: String): VideoInfoOutput {
         ?.filter { it.contentType == "video/mp4" }
         ?.sortedByDescending { it.bitrate }
         ?.firstOrNull()
+    val caption = tweet?.fullText
+        ?.split('\n')?.get(0)
 
     if (variant == null) {
         throw Exception("Video not found")
     }
 
-    val result = VideoInfoOutput(
-        filename = getFilenameByTimestamp(),
-        contentUrl = variant.url ?: "",
+    val result = MediaInfoExtraction(
+        type = MediaType.Video,
         sourceUrl = url,
-        source = "instagram",
+        source = "twitter",
         width = media.originalInfo?.width,
         height = media.originalInfo?.height,
-        username = user?.screenName,
-        caption = tweet.fullText?.split('\n')?.get(0),
+        caption = caption,
         duration = media.videoInfo.durationMillis?.div(1000)?.toDouble(),
-        userAvatarUrl = user?.profileImageUrlHttps,
         thumbnailUrl = media.mediaUrlHttps,
+        author = AuthorExtraction(
+            username = user?.screenName,
+            avatarUrl = user?.profileImageUrlHttps,
+            profileUrl = user?.screenName?.let { "$BASE_URL/@${it}/" },
+            name = user?.screenName?.let { "@${it}" },
+            userId = user?.screenName,
+        ),
+        download = MediaDownloadableExtraction(
+            contentType = ContentType.Video.MP4.toString(),
+            url = variant.url ?: "",
+            filename = getFilenameForMedia(caption, postIds.twid),
+        ),
     )
 
     return result
@@ -134,6 +149,7 @@ private data class GraphqlVariables(
     val withVoice: Boolean,
 )
 
+private const val BASE_URL = "https://www.x.com"
 private const val GRAPHQL_URL = "https://x.com/i/api/graphql"
 private const val QUERY_ENDPOINT = "2ICDjqPd81tulZcYrtpTuQ/TweetResultByRestId"
 private const val API_URL = "https://api.x.com/1.1"

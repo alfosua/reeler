@@ -2,8 +2,8 @@ package com.catalinalabs.reeler.ui.models
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.catalinalabs.reeler.data.DownloadEntity
 import com.catalinalabs.reeler.data.DownloadRepository
+import com.catalinalabs.reeler.data.schema.DownloadLog
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +16,7 @@ class HistoryViewModel @Inject constructor(
     private val repository: DownloadRepository,
 ) : ViewModel() {
     val uiState: StateFlow<UiState> =
-        repository.getAllDownloadsStream()
+        repository.flowAll()
             .map { UiState(it) }
             .stateIn(
                 scope = viewModelScope,
@@ -24,5 +24,5 @@ class HistoryViewModel @Inject constructor(
                 initialValue = UiState(),
             )
 
-    data class UiState(val items: List<DownloadEntity> = listOf())
+    data class UiState(val items: List<DownloadLog> = listOf())
 }

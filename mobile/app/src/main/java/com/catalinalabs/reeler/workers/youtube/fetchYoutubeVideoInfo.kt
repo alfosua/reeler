@@ -1,19 +1,23 @@
 package com.catalinalabs.reeler.workers.youtube
 
-import com.catalinalabs.reeler.network.models.VideoInfoOutput
-import com.catalinalabs.reeler.workers.getFilenameByTimestamp
+import com.catalinalabs.reeler.workers.AuthorExtraction
+import com.catalinalabs.reeler.workers.MediaDownloadableExtraction
+import com.catalinalabs.reeler.workers.MediaInfoExtraction
+import com.catalinalabs.reeler.workers.MediaType
+import com.catalinalabs.reeler.workers.getFilenameForMedia
 import com.github.kiulian.downloader.YoutubeDownloader
 import com.github.kiulian.downloader.downloader.request.RequestVideoInfo
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.request.get
+import io.ktor.http.ContentType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-suspend fun fetchYoutubeVideoInfo(url: String): VideoInfoOutput {
+suspend fun fetchYoutubeVideoInfo(url: String): MediaInfoExtraction {
     val raw = fetchRawData(url)
 
     val authorAvatarUrl = raw.endscreen?.endscreenRenderer?.elements
@@ -28,23 +32,35 @@ suspend fun fetchYoutubeVideoInfo(url: String): VideoInfoOutput {
     }
     val details = video.details()
     val format = video.bestVideoWithAudioFormat()
+    val caption = details.title()
 
-    val result = VideoInfoOutput(
-        filename = getFilenameByTimestamp(),
-        contentUrl = format.url(),
+    val result = MediaInfoExtraction(
+        type = MediaType.Video,
         sourceUrl = url,
         source = "youtube",
         width = format.width(),
         height = format.height(),
-        username = details.author(),
-        caption = details.title(),
+        caption = caption,
         duration = details.lengthSeconds().toDouble(),
-        userAvatarUrl = authorAvatarUrl,
         thumbnailUrl = details.thumbnails().firstOrNull(),
+        author = AuthorExtraction(
+            username = details.author(),
+            avatarUrl = authorAvatarUrl,
+            profileUrl = details.author()?.let { "$BASE_URL/@${it}/" },
+            name = details.author(),
+            userId = details.author(),
+        ),
+        download = MediaDownloadableExtraction(
+            contentType = ContentType.Video.MP4.toString(),
+            url = format.url(),
+            filename = getFilenameForMedia(caption, videoId),
+        ),
     )
 
     return result
 }
+
+const val BASE_URL = "https://www.youtube.com"
 
 private fun extractVideoIdFromYoutubeUrl(url: String): String? {
     val pattern = Regex(

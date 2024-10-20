@@ -14,4 +14,5 @@
     <string name="home">Home</string>
     <string name="downloads">Downloads</string>
     <string name="premium">Premium</string>
+    <string name="the_file_could_not_be_shared">The file could not be shared.</string>
 </resources>

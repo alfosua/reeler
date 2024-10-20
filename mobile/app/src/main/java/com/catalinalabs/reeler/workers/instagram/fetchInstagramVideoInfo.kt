@@ -1,7 +1,10 @@
 package com.catalinalabs.reeler.workers.instagram
 
-import com.catalinalabs.reeler.network.models.VideoInfoOutput
-import com.catalinalabs.reeler.workers.getFilenameByTimestamp
+import com.catalinalabs.reeler.workers.AuthorExtraction
+import com.catalinalabs.reeler.workers.MediaDownloadableExtraction
+import com.catalinalabs.reeler.workers.MediaInfoExtraction
+import com.catalinalabs.reeler.workers.MediaType
+import com.catalinalabs.reeler.workers.getFilenameForMedia
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -9,6 +12,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.cookies.get
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.setCookie
 import io.ktor.serialization.kotlinx.json.json
@@ -17,26 +21,36 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-suspend fun fetchInstagramVideoInfo(url: String): VideoInfoOutput {
+suspend fun fetchInstagramVideoInfo(url: String): MediaInfoExtraction {
     val postIds = getPostIdentityFromUrl(url)
     val rawData = fetchRawData(postIds)
     val media = rawData.data?.xdtShortcodeMedia
+    val owner = media?.owner
     val caption = media?.edgeMediaToCaption?.edges
         ?.getOrNull(0)?.node?.text
         ?.split('\n')?.get(0)
 
-    val result = VideoInfoOutput(
-        filename = getFilenameByTimestamp(),
-        contentUrl = media?.videoUrl ?: "",
+    val result = MediaInfoExtraction(
+        type = MediaType.Video,
         sourceUrl = url,
         source = "instagram",
         width = media?.dimensions?.width,
         height = media?.dimensions?.height,
-        username = media?.owner?.username,
         caption = caption,
         duration = media?.videoDuration,
-        userAvatarUrl = media?.owner?.profilePicUrl,
         thumbnailUrl = media?.thumbnailSrc,
+        author = AuthorExtraction(
+            username = owner?.username,
+            avatarUrl = owner?.profilePicUrl,
+            profileUrl = owner?.let { "$BASE_URL/${it.username}/" },
+            name = owner?.let { "@${it.username}" },
+            userId = owner?.username,
+        ),
+        download = MediaDownloadableExtraction(
+            contentType = ContentType.Video.MP4.toString(),
+            url = media?.videoUrl ?: "",
+            filename = getFilenameForMedia(caption, postIds.pk.toString()),
+        ),
     )
 
     return result

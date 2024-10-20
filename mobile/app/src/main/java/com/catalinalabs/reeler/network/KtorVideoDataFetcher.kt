@@ -1,8 +1,8 @@
 package com.catalinalabs.reeler.network
 
 import android.util.Log
-import com.catalinalabs.reeler.network.models.VideoInfoOutput
 import com.catalinalabs.reeler.utils.RegexExtensions.contains
+import com.catalinalabs.reeler.workers.MediaDownloadableExtraction
 import com.catalinalabs.reeler.workers.tiktok.fetchTiktokVideoData
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -13,9 +13,9 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.Url
 
 class ProxyVideoDataFetcher : VideoDataFetcher {
-    override suspend fun getVideoData(info: VideoInfoOutput): ByteArray {
-        Log.d(VideoDataFetcher.LOG_TAG, "Requesting video data at: ${info.contentUrl}")
-        val url = Url(info.contentUrl)
+    override suspend fun getVideoData(info: MediaDownloadableExtraction): ByteArray {
+        Log.d(VideoDataFetcher.LOG_TAG, "Requesting video data at: ${info.url}")
+        val url = Url(info.url)
         val fetch = when (url.host) {
             in Regex("(?:.*\\.)?tiktok\\.com") -> {
                 ::fetchTiktokVideoData
@@ -32,13 +32,13 @@ class ProxyVideoDataFetcher : VideoDataFetcher {
 }
 
 class KtorVideoDataFetcher : VideoDataFetcher {
-    override suspend fun getVideoData(info: VideoInfoOutput): ByteArray {
+    override suspend fun getVideoData(info: MediaDownloadableExtraction): ByteArray {
         val client = HttpClient(CIO) {
             install(HttpTimeout) {
                 requestTimeoutMillis = 3600000
             }
         }
-        val response: HttpResponse = client.get(info.contentUrl)
+        val response: HttpResponse = client.get(info.url)
         val responseData: ByteArray = response.body()
         return responseData
     }

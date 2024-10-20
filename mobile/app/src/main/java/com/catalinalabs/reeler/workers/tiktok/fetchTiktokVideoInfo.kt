@@ -1,7 +1,10 @@
 package com.catalinalabs.reeler.workers.tiktok
 
-import com.catalinalabs.reeler.network.models.VideoInfoOutput
-import com.catalinalabs.reeler.workers.getFilenameByTimestamp
+import com.catalinalabs.reeler.workers.AuthorExtraction
+import com.catalinalabs.reeler.workers.MediaDownloadableExtraction
+import com.catalinalabs.reeler.workers.MediaInfoExtraction
+import com.catalinalabs.reeler.workers.MediaType
+import com.catalinalabs.reeler.workers.getFilenameForMedia
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
@@ -15,32 +18,46 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-suspend fun fetchTiktokVideoInfo(url: String): VideoInfoOutput {
+suspend fun fetchTiktokVideoInfo(url: String): MediaInfoExtraction {
     val (rawData, cookie) = fetchRawData(url)
     val videoDetail = rawData.defaultScope?.videoDetail
     val itemStruct = videoDetail?.itemInfo?.itemStruct
+    val video = itemStruct?.video
+    val uniqueId = itemStruct?.author?.uniqueId
+    val caption = videoDetail?.shareMeta?.desc
+        ?.split('\n')?.get(0)
 
-    val result = VideoInfoOutput(
-        filename = getFilenameByTimestamp(),
-        source = "tiktok",
+    val result = MediaInfoExtraction(
+        type = MediaType.Video,
         sourceUrl = url,
-        caption = videoDetail?.shareMeta?.desc,
-        username = itemStruct?.author?.uniqueId,
-        userAvatarUrl = itemStruct?.author?.avatarThumb,
-        width = itemStruct?.video?.width,
-        height = itemStruct?.video?.height,
-        duration = itemStruct?.video?.duration?.toDouble(),
-        contentUrl = itemStruct?.video?.playAddr ?: "",
-        thumbnailUrl = itemStruct?.video?.cover,
-        cookie = cookie,
+        source = "tiktok",
+        width = video?.width,
+        height = video?.height,
+        caption = caption,
+        duration = video?.duration?.toDouble(),
+        thumbnailUrl = video?.cover,
+        author = AuthorExtraction(
+            username = uniqueId,
+            avatarUrl = itemStruct?.author?.avatarThumb,
+            profileUrl = uniqueId?.let { "$BASE_URL/@${it}/" },
+            name = uniqueId?.let { "@${it}" },
+            userId = uniqueId,
+        ),
+        download = MediaDownloadableExtraction(
+            contentType = ContentType.Video.MP4.toString(),
+            url = video?.playAddr ?: "",
+            cookie = cookie,
+            referer = url,
+            filename = getFilenameForMedia(caption, uniqueId)
+        ),
     )
 
     return result
 }
 
+private const val BASE_URL = "https://www.tiktok.com"
 private const val USER_AGENT =
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
-
 private const val ACCEPT =
     "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
 

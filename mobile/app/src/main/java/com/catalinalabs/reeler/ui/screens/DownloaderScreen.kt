@@ -34,8 +34,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.catalinalabs.reeler.R
-import com.catalinalabs.reeler.data.DownloadEntity
-import com.catalinalabs.reeler.data.DownloadMockData
+import com.catalinalabs.reeler.data.schema.DownloadLog
+import com.catalinalabs.reeler.data.testing.DownloadMockData
 import com.catalinalabs.reeler.ui.components.DownloadItem
 import com.catalinalabs.reeler.ui.models.DownloadActionsViewModel
 import com.catalinalabs.reeler.ui.models.DownloadProcessStatus
@@ -88,7 +88,7 @@ fun DownloaderScreen(
 fun DownloaderScreen(
     sourceUrl: String,
     status: DownloadProcessStatus,
-    download: DownloadEntity?,
+    download: DownloadLog?,
     onVideoUrlChange: (String) -> Unit,
     startDownloadProcess: () -> Unit,
     modifier: Modifier = Modifier,
@@ -130,8 +130,9 @@ fun DownloaderScreen(
             DownloadItem(
                 download = download,
                 onItemClick = {
-                    if (download.filePath != null) {
-                        navigateToVideoPlayer(download.filePath)
+                    val filePath = download.info?.file?.filePath
+                    if (filePath != null) {
+                        navigateToVideoPlayer(filePath)
                     }
                 },
                 onOpenOn = onOpenOn,

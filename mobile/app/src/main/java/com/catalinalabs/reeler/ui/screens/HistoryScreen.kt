@@ -15,8 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.catalinalabs.reeler.data.DownloadEntity
-import com.catalinalabs.reeler.data.DownloadMockData
+import com.catalinalabs.reeler.data.schema.DownloadLog
+import com.catalinalabs.reeler.data.testing.DownloadMockData
 import com.catalinalabs.reeler.ui.components.AdBanner
 import com.catalinalabs.reeler.ui.components.AdBannerSize
 import com.catalinalabs.reeler.ui.components.DownloadItem
@@ -53,15 +53,16 @@ fun HistoryScreen(
 
 @Composable
 fun HistoryScreen(
-    downloads: List<DownloadEntity>,
+    downloads: List<DownloadLog>,
     modifier: Modifier = Modifier,
     navigateToVideoPlayer: (String) -> Unit = { },
-    onOpenOn: (DownloadEntity) -> Unit,
-    onShare: (DownloadEntity) -> Unit,
-    onDelete: (DownloadEntity) -> Unit,
+    onOpenOn: (DownloadLog) -> Unit,
+    onShare: (DownloadLog) -> Unit,
+    onDelete: (DownloadLog) -> Unit,
 ) {
     LazyColumn(modifier) {
         itemsIndexed(downloads) { index, download ->
+            val filePath = download.info?.file?.filePath
             if (index == 0) {
                 Spacer(Modifier.height(32.dp))
                 AdBanner(
@@ -74,8 +75,8 @@ fun HistoryScreen(
             DownloadItem(
                 download = download,
                 onItemClick = {
-                    if (download.filePath != null) {
-                        navigateToVideoPlayer(download.filePath)
+                    if (filePath != null) {
+                        navigateToVideoPlayer(filePath)
                     }
                 },
                 onOpenOn = { onOpenOn(download) },
