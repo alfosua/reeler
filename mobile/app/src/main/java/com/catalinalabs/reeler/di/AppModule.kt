@@ -5,10 +5,8 @@ import com.catalinalabs.reeler.data.DownloadRepository
 import com.catalinalabs.reeler.data.OfflineDownloadRepository
 import com.catalinalabs.reeler.data.live.DownloadStatusHolder
 import com.catalinalabs.reeler.data.schema.Schema
-import com.catalinalabs.reeler.network.ProxyVideoDataFetcher
-import com.catalinalabs.reeler.network.ProxyWorkerApiService
-import com.catalinalabs.reeler.network.VideoDataFetcher
-import com.catalinalabs.reeler.network.WorkerApiService
+import com.catalinalabs.reeler.logic.MediaDataFetcher
+import com.catalinalabs.reeler.logic.MediaInfoExtractor
 import com.catalinalabs.reeler.services.ReelerAdsService
 import com.catalinalabs.reeler.services.ReelerMediaService
 import com.catalinalabs.reeler.services.ReelerNotificationsService
@@ -51,14 +49,14 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideVideoDataFetcher(): VideoDataFetcher {
-        return ProxyVideoDataFetcher()
+    fun provideVideoDataFetcher(): MediaDataFetcher {
+        return MediaDataFetcher()
     }
 
     @Provides
     @Singleton
-    fun provideWorkerApiService(): WorkerApiService {
-        return ProxyWorkerApiService()
+    fun provideWorkerApiService(): MediaInfoExtractor {
+        return MediaInfoExtractor()
     }
 
     @Provides

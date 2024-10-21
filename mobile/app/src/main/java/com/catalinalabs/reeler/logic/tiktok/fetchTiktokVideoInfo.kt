@@ -1,10 +1,10 @@
-package com.catalinalabs.reeler.workers.tiktok
+package com.catalinalabs.reeler.logic.tiktok
 
-import com.catalinalabs.reeler.workers.AuthorExtraction
-import com.catalinalabs.reeler.workers.MediaDownloadableExtraction
-import com.catalinalabs.reeler.workers.MediaInfoExtraction
-import com.catalinalabs.reeler.workers.MediaType
-import com.catalinalabs.reeler.workers.getFilenameForMedia
+import com.catalinalabs.reeler.logic.AuthorExtraction
+import com.catalinalabs.reeler.logic.MediaDownloadableExtraction
+import com.catalinalabs.reeler.logic.MediaInfoExtraction
+import com.catalinalabs.reeler.logic.MediaType
+import com.catalinalabs.reeler.logic.getFilenameForMedia
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO

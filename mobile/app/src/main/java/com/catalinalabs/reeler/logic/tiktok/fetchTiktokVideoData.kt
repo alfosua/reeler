@@ -1,6 +1,6 @@
-package com.catalinalabs.reeler.workers.tiktok
+package com.catalinalabs.reeler.logic.tiktok
 
-import com.catalinalabs.reeler.workers.MediaDownloadableExtraction
+import com.catalinalabs.reeler.logic.MediaDownloadableExtraction
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO

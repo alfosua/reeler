@@ -1,6 +1,6 @@
 package com.catalinalabs.reeler.data.schema
 
-import com.catalinalabs.reeler.workers.MediaType
+import com.catalinalabs.reeler.logic.MediaType
 import io.ktor.http.ContentType
 import io.realm.kotlin.ext.realmListOf
 import io.realm.kotlin.types.EmbeddedRealmObject

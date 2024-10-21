@@ -1,10 +1,10 @@
-package com.catalinalabs.reeler.workers.youtube
+package com.catalinalabs.reeler.logic.youtube
 
-import com.catalinalabs.reeler.workers.AuthorExtraction
-import com.catalinalabs.reeler.workers.MediaDownloadableExtraction
-import com.catalinalabs.reeler.workers.MediaInfoExtraction
-import com.catalinalabs.reeler.workers.MediaType
-import com.catalinalabs.reeler.workers.getFilenameForMedia
+import com.catalinalabs.reeler.logic.AuthorExtraction
+import com.catalinalabs.reeler.logic.MediaDownloadableExtraction
+import com.catalinalabs.reeler.logic.MediaInfoExtraction
+import com.catalinalabs.reeler.logic.MediaType
+import com.catalinalabs.reeler.logic.getFilenameForMedia
 import com.github.kiulian.downloader.YoutubeDownloader
 import com.github.kiulian.downloader.downloader.request.RequestVideoInfo
 import io.ktor.client.HttpClient

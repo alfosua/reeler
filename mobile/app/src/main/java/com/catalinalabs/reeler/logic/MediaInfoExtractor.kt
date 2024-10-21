@@ -1,15 +1,14 @@
-package com.catalinalabs.reeler.network
+package com.catalinalabs.reeler.logic
 
+import com.catalinalabs.reeler.logic.instagram.fetchInstagramVideoInfo
+import com.catalinalabs.reeler.logic.tiktok.fetchTiktokVideoInfo
+import com.catalinalabs.reeler.logic.twitter.fetchTwitterVideoInfo
+import com.catalinalabs.reeler.logic.youtube.fetchYoutubeVideoInfo
 import com.catalinalabs.reeler.utils.RegexExtensions.contains
-import com.catalinalabs.reeler.workers.MediaInfoExtraction
-import com.catalinalabs.reeler.workers.instagram.fetchInstagramVideoInfo
-import com.catalinalabs.reeler.workers.tiktok.fetchTiktokVideoInfo
-import com.catalinalabs.reeler.workers.twitter.fetchTwitterVideoInfo
-import com.catalinalabs.reeler.workers.youtube.fetchYoutubeVideoInfo
 import io.ktor.http.Url
 
-class ProxyWorkerApiService : WorkerApiService {
-    override suspend fun getVideoInfo(sourceUrl: String): MediaInfoExtraction {
+class MediaInfoExtractor {
+    suspend fun extractMediaInfo(sourceUrl: String): MediaInfoExtraction {
         val url = Url(sourceUrl)
         val fetch = when (url.host) {
             "www.youtube.com", "m.youtube.com", "youtube.com", "youtu.be" -> {
@@ -29,8 +28,7 @@ class ProxyWorkerApiService : WorkerApiService {
             }
 
             else -> {
-                val workerApi = KtorWorkerApiService()
-                workerApi::getVideoInfo
+                throw NotImplementedError("Unsupported source URL: $sourceUrl")
             }
         }
         val result = fetch(sourceUrl)

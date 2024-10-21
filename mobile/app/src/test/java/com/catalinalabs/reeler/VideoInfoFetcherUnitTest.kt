@@ -1,9 +1,9 @@
 package com.catalinalabs.reeler
 
-import com.catalinalabs.reeler.workers.instagram.fetchInstagramVideoInfo
-import com.catalinalabs.reeler.workers.tiktok.fetchTiktokVideoInfo
-import com.catalinalabs.reeler.workers.twitter.fetchTwitterVideoInfo
-import com.catalinalabs.reeler.workers.youtube.fetchYoutubeVideoInfo
+import com.catalinalabs.reeler.logic.instagram.fetchInstagramVideoInfo
+import com.catalinalabs.reeler.logic.tiktok.fetchTiktokVideoInfo
+import com.catalinalabs.reeler.logic.twitter.fetchTwitterVideoInfo
+import com.catalinalabs.reeler.logic.youtube.fetchYoutubeVideoInfo
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 

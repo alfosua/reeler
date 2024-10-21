@@ -1,4 +1,4 @@
-package com.catalinalabs.reeler.workers
+package com.catalinalabs.reeler.logic
 
 object MediaType {
     const val Video = "video"

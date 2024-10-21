@@ -9,10 +9,10 @@ import com.catalinalabs.reeler.data.DownloadRepository
 import com.catalinalabs.reeler.data.live.DownloadStatusHolder
 import com.catalinalabs.reeler.data.schema.DownloadLog
 import com.catalinalabs.reeler.data.schema.files
-import com.catalinalabs.reeler.network.VideoDataFetcher
-import com.catalinalabs.reeler.network.WorkerApiService
-import com.catalinalabs.reeler.workers.asMediaInfo
-import com.catalinalabs.reeler.workers.downloadables
+import com.catalinalabs.reeler.logic.MediaDataFetcher
+import com.catalinalabs.reeler.logic.MediaInfoExtractor
+import com.catalinalabs.reeler.logic.asMediaInfo
+import com.catalinalabs.reeler.logic.downloadables
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 
@@ -23,8 +23,8 @@ class DownloadWorker @AssistedInject constructor(
     private val repository: DownloadRepository,
     private val notifications: ReelerNotificationsService,
     private val media: ReelerMediaService,
-    private val extractor: WorkerApiService,
-    private val fetcher: VideoDataFetcher,
+    private val extractor: MediaInfoExtractor,
+    private val fetcher: MediaDataFetcher,
     private val status: DownloadStatusHolder,
 ) : CoroutineWorker(appContext, workerParams) {
     override suspend fun doWork(): Result {
@@ -32,7 +32,7 @@ class DownloadWorker @AssistedInject constructor(
         try {
             status.processing()
             log("Extracting media info from URL: $sourceUrl")
-            val extraction = extractor.getVideoInfo(sourceUrl)
+            val extraction = extractor.extractMediaInfo(sourceUrl)
             val download = repository.create(DownloadLog().apply {
                 timestamp = System.currentTimeMillis()
                 info = extraction.asMediaInfo()
@@ -42,7 +42,7 @@ class DownloadWorker @AssistedInject constructor(
 
             status.downloading()
             for ((index, target) in extraction.downloadables.withIndex()) {
-                val data = fetcher.getVideoData(target)
+                val data = fetcher.fetchMediaData(target)
                 val result = media.writeFileInMediaStore(data, target.filename, target.contentType)
                 log("Download of file \"${target.filename}\" completed successfully")
                 repository.update(download) {

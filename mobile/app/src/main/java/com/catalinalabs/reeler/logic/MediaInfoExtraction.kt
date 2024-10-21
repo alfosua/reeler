@@ -1,4 +1,4 @@
-package com.catalinalabs.reeler.workers
+package com.catalinalabs.reeler.logic
 
 import com.catalinalabs.reeler.data.schema.Author
 import com.catalinalabs.reeler.data.schema.MediaFile
