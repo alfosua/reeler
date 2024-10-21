@@ -56,6 +56,12 @@ fun DownloaderScreen(
     val status by viewModel.status.observeAsState(initial = DownloadStatus.Idle)
     val download by viewModel.download.collectAsState()
 
+    LaunchedEffect(status) {
+        if (status is DownloadStatus.DownloadSuccess) {
+            viewModel.updateSourceUrl("")
+        }
+    }
+
     DownloaderScreen(
         status = status,
         download = download,
