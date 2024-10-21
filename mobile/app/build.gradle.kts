@@ -68,10 +68,12 @@ dependencies {
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.runtime.livedata)
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.ui.text.google.fonts)
+    implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.coil.compose)
 
     testImplementation(libs.junit)
@@ -92,19 +94,12 @@ dependencies {
     implementation(libs.play.services.ads)
 
     implementation(libs.hilt.android)
+    implementation(libs.hilt.work)
     ksp(libs.hilt.compiler)
-
-    implementation(libs.androidx.room.runtime)
-    annotationProcessor(libs.androidx.room.compiler)
-    ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.hilt.compiler)
 
     implementation(libs.jsoup)
     implementation(libs.java.youtube.downloader)
 
     implementation(libs.library.base)
-    // If using Device Sync
-    implementation(libs.library.sync)
-    // If using coroutines with the SDK
-    implementation(libs.kotlinx.coroutines.core)
 }

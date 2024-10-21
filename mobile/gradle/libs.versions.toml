@@ -5,7 +5,9 @@ couchbaseLiteAndroidKtx = "3.2.0"
 gradle = "8.1.0"
 hiltAndroid = "2.51.1"
 hiltCompiler = "2.51.1"
+hiltCompilerVersion = "1.2.0"
 hiltNavigationCompose = "1.2.0"
+hiltWork = "1.2.0"
 javaYoutubeDownloader = "3.2.5"
 jsoup = "1.13.1"
 kotlin = "1.9.0"
@@ -26,11 +28,14 @@ playServicesAds = "23.3.0"
 roomCompiler = "2.6.1"
 roomKtx = "2.6.1"
 roomRuntime = "2.6.1"
+runtimeLivedata = "1.7.4"
 uiTextGoogleFonts = "1.7.2"
 navigationCompose = "2.8.1"
+workRuntimeKtx = "2.9.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltCompilerVersion" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelCompose" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
@@ -39,11 +44,14 @@ androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "medi
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "runtimeLivedata" }
+androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
 couchbase-lite-android-ktx = { module = "com.couchbase.lite:couchbase-lite-android-ktx", version.ref = "couchbaseLiteAndroidKtx" }
 gradle = { module = "com.android.tools.build:gradle", version.ref = "gradle" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hiltCompiler" }
+hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
 java-youtube-downloader = { module = "com.github.sealedtx:java-youtube-downloader", version.ref = "javaYoutubeDownloader" }
 jsoup = { module = "org.jsoup:jsoup", version.ref = "jsoup" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }

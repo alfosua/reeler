@@ -3,6 +3,7 @@ package com.catalinalabs.reeler.di
 import android.app.Application
 import com.catalinalabs.reeler.data.DownloadRepository
 import com.catalinalabs.reeler.data.OfflineDownloadRepository
+import com.catalinalabs.reeler.data.live.DownloadStatusHolder
 import com.catalinalabs.reeler.data.schema.Schema
 import com.catalinalabs.reeler.network.ProxyVideoDataFetcher
 import com.catalinalabs.reeler.network.ProxyWorkerApiService
@@ -58,6 +59,12 @@ object AppModule {
     @Singleton
     fun provideWorkerApiService(): WorkerApiService {
         return ProxyWorkerApiService()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDownloadStatusHolder(): DownloadStatusHolder {
+        return DownloadStatusHolder()
     }
 }
 

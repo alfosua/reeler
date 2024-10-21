@@ -26,6 +26,9 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,11 +37,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.catalinalabs.reeler.R
+import com.catalinalabs.reeler.data.live.DownloadStatus
 import com.catalinalabs.reeler.data.schema.DownloadLog
 import com.catalinalabs.reeler.data.testing.DownloadMockData
 import com.catalinalabs.reeler.ui.components.DownloadItem
 import com.catalinalabs.reeler.ui.models.DownloadActionsViewModel
-import com.catalinalabs.reeler.ui.models.DownloadProcessStatus
 import com.catalinalabs.reeler.ui.models.DownloaderViewModel
 import com.catalinalabs.reeler.ui.theme.ReelerTheme
 
@@ -50,11 +53,12 @@ fun DownloaderScreen(
     navigateToVideoPlayer: (String) -> Unit = { },
 ) {
     val context = LocalContext.current
-    val download = viewModel.download
+    val status by viewModel.status.observeAsState(initial = DownloadStatus.Idle)
+    val download by viewModel.download.collectAsState()
 
     DownloaderScreen(
-        status = viewModel.status,
-        download = viewModel.download,
+        status = status,
+        download = download,
         sourceUrl = viewModel.sourceUrl,
         onVideoUrlChange = viewModel::updateSourceUrl,
         startDownloadProcess = {
@@ -65,20 +69,19 @@ fun DownloaderScreen(
         navigateToVideoPlayer = navigateToVideoPlayer,
         modifier = modifier,
         onOpenOn = {
-            if (download != null) {
-                actions.openItemOnSocialMedia(context, download)
+            download?.let {
+                actions.openItemOnSocialMedia(context, it)
             }
         },
         onShare = {
-            if (download != null) {
-                actions.shareItem(context, download)
+            download?.let {
+                actions.shareItem(context, it)
             }
         },
         onDelete = {
-            if (download != null) {
-                actions.deleteItem(download)
-                viewModel.updateDownload(null)
-                viewModel.updateStatus(DownloadProcessStatus.Idle)
+            download?.let {
+                actions.deleteItem(it)
+                viewModel.resetStatus()
             }
         },
     )
@@ -87,7 +90,7 @@ fun DownloaderScreen(
 @Composable
 fun DownloaderScreen(
     sourceUrl: String,
-    status: DownloadProcessStatus,
+    status: DownloadStatus,
     download: DownloadLog?,
     onVideoUrlChange: (String) -> Unit,
     startDownloadProcess: () -> Unit,
@@ -156,7 +159,7 @@ fun DownloaderScreenPreview() {
     ReelerTheme {
         DownloaderScreen(
             sourceUrl = "",
-            status = DownloadProcessStatus.DownloadSuccess,
+            status = DownloadStatus.DownloadSuccess,
             download = DownloadMockData.forPreview[0],
             onVideoUrlChange = { },
             startDownloadProcess = { },
@@ -229,7 +232,7 @@ fun DownloadFieldPreview() {
 
 @Composable
 fun DownloadProcessStatusTracker(
-    status: DownloadProcessStatus,
+    status: DownloadStatus,
     modifier: Modifier = Modifier,
     successContent: @Composable () -> Unit = { },
 ) {
@@ -242,7 +245,7 @@ fun DownloadProcessStatusTracker(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             when (status) {
-                is DownloadProcessStatus.Processing -> {
+                is DownloadStatus.Processing -> {
                     CircularProgressIndicator(
                         modifier = Modifier.size(40.dp),
                     )
@@ -251,7 +254,7 @@ fun DownloadProcessStatusTracker(
                     )
                 }
 
-                is DownloadProcessStatus.ProcessingSuccess -> {
+                is DownloadStatus.ProcessingSuccess -> {
                     Icon(
                         imageVector = Icons.Rounded.VideoLibrary,
                         contentDescription = null,
@@ -263,7 +266,7 @@ fun DownloadProcessStatusTracker(
                     successContent()
                 }
 
-                is DownloadProcessStatus.Downloading -> {
+                is DownloadStatus.Downloading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.size(40.dp),
                     )
@@ -272,7 +275,7 @@ fun DownloadProcessStatusTracker(
                     )
                 }
 
-                is DownloadProcessStatus.DownloadSuccess -> {
+                is DownloadStatus.DownloadSuccess -> {
                     Icon(
                         imageVector = Icons.Rounded.FileDownloadDone,
                         contentDescription = null,
@@ -281,7 +284,7 @@ fun DownloadProcessStatusTracker(
                     Text(text = stringResource(R.string.video_downloaded_successfully))
                 }
 
-                is DownloadProcessStatus.Error -> {
+                is DownloadStatus.Error -> {
                     Icon(
                         imageVector = Icons.Rounded.ErrorOutline,
                         contentDescription = null,
@@ -302,7 +305,7 @@ fun DownloadProcessStatusTracker(
 fun DownloadProcessStatusTrackerPreviewWhenProcessing() {
     ReelerTheme {
         DownloadProcessStatusTracker(
-            status = DownloadProcessStatus.Processing,
+            status = DownloadStatus.Processing,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -313,7 +316,7 @@ fun DownloadProcessStatusTrackerPreviewWhenProcessing() {
 fun DownloadProcessStatusTrackerPreviewWhenProcessingSuccess() {
     ReelerTheme {
         DownloadProcessStatusTracker(
-            status = DownloadProcessStatus.ProcessingSuccess,
+            status = DownloadStatus.ProcessingSuccess,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -324,7 +327,7 @@ fun DownloadProcessStatusTrackerPreviewWhenProcessingSuccess() {
 fun DownloadProcessStatusTrackerPreviewWhenDownloading() {
     ReelerTheme {
         DownloadProcessStatusTracker(
-            status = DownloadProcessStatus.Downloading,
+            status = DownloadStatus.Downloading,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -335,7 +338,7 @@ fun DownloadProcessStatusTrackerPreviewWhenDownloading() {
 fun DownloadProcessStatusTrackerPreviewWhenDownloadSuccess() {
     ReelerTheme {
         DownloadProcessStatusTracker(
-            status = DownloadProcessStatus.DownloadSuccess,
+            status = DownloadStatus.DownloadSuccess,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -346,7 +349,7 @@ fun DownloadProcessStatusTrackerPreviewWhenDownloadSuccess() {
 fun DownloadProcessStatusTrackerPreviewWhenError() {
     ReelerTheme {
         DownloadProcessStatusTracker(
-            status = DownloadProcessStatus.Error("Connection error"),
+            status = DownloadStatus.Error("Connection error"),
             modifier = Modifier.fillMaxWidth(),
         )
     }

@@ -25,6 +25,11 @@ class OfflineDownloadRepository @Inject constructor(
             .map { change -> change.list.firstOrNull { it.id == id } }
     }
 
+    override fun flowMostRecent(): Flow<DownloadLog?> {
+        return query().sort("timestamp", Sort.DESCENDING).asFlow()
+            .map { change -> change.list.firstOrNull() }
+    }
+
     override suspend fun create(item: DownloadLog): DownloadLog {
         return realm.write {
             copyToRealm(item)

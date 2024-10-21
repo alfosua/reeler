@@ -9,6 +9,8 @@ interface DownloadRepository {
 
     fun flowOne(id: BsonObjectId): Flow<DownloadLog?>
 
+    fun flowMostRecent(): Flow<DownloadLog?>
+
     suspend fun create(item: DownloadLog): DownloadLog
 
     suspend fun delete(item: DownloadLog)
