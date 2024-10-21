@@ -7,24 +7,38 @@ class DownloadStatusHolder {
     private val status = MutableLiveData<DownloadStatus>()
     val data: LiveData<DownloadStatus> = status
 
-    fun update(newStatus: DownloadStatus) {
+    private fun update(newStatus: DownloadStatus) {
         status.postValue(newStatus)
     }
 
     fun idle() = update(DownloadStatus.Idle)
+
     fun processing() = update(DownloadStatus.Processing)
-    fun processingSuccess() = update(DownloadStatus.ProcessingSuccess)
-    fun downloading() = update(DownloadStatus.Downloading)
-    fun downloadSuccess() = update(DownloadStatus.DownloadSuccess)
+
+    fun downloading(
+        progress: Double? = null,
+        index: Int? = null,
+        count: Int? = null,
+    ) = update(DownloadStatus.Downloading(progress, index, count))
+
+    fun downloadSuccess() = update(DownloadStatus.Success)
+
     fun error(message: String) = update(DownloadStatus.Error(message))
 }
 
 interface DownloadStatus {
     object Idle : DownloadStatus
+
     object Processing : DownloadStatus
-    object ProcessingSuccess : DownloadStatus
-    object Downloading : DownloadStatus
-    object DownloadSuccess : DownloadStatus
+
+    data class Downloading(
+        val progress: Double? = null,
+        val index: Int? = null,
+        val count: Int? = null,
+    ) : DownloadStatus
+
+    object Success : DownloadStatus
+
     data class Error(
         val message: String,
     ) : DownloadStatus

@@ -1,10 +1,12 @@
 package com.catalinalabs.reeler.logic.tiktok
 
+import com.catalinalabs.reeler.logic.MediaDataFetcherOptions
 import com.catalinalabs.reeler.logic.MediaDownloadableExtraction
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.onDownload
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
 import io.ktor.client.request.headers
@@ -12,7 +14,10 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.userAgent
 
-suspend fun fetchTiktokVideoData(info: MediaDownloadableExtraction): ByteArray {
+suspend fun fetchMediaDataFromTiktok(
+    info: MediaDownloadableExtraction,
+    options: MediaDataFetcherOptions? = null,
+): ByteArray {
     val client = HttpClient(CIO) {
         install(HttpTimeout) {
             requestTimeoutMillis = 3600000
@@ -28,6 +33,12 @@ suspend fun fetchTiktokVideoData(info: MediaDownloadableExtraction): ByteArray {
             append("Referer", info.referer ?: "")
             if (info.cookie != null) {
                 append(HttpHeaders.Cookie, info.cookie)
+            }
+        }
+        options?.onProgressEmit?.let {
+            onDownload { bytesSentTotal, contentLength ->
+                val progress = bytesSentTotal / contentLength.toDouble() * 100
+                it(progress)
             }
         }
     }

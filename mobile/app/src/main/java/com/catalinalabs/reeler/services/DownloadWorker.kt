@@ -10,6 +10,7 @@ import com.catalinalabs.reeler.data.live.DownloadStatusHolder
 import com.catalinalabs.reeler.data.schema.DownloadLog
 import com.catalinalabs.reeler.data.schema.files
 import com.catalinalabs.reeler.logic.MediaDataFetcher
+import com.catalinalabs.reeler.logic.MediaDataFetcherOptions
 import com.catalinalabs.reeler.logic.MediaInfoExtractor
 import com.catalinalabs.reeler.logic.asMediaInfo
 import com.catalinalabs.reeler.logic.downloadables
@@ -41,8 +42,13 @@ class DownloadWorker @AssistedInject constructor(
             log("Successfully extracted the media info from URL \"$sourceUrl\": $extraction")
 
             status.downloading()
-            for ((index, target) in extraction.downloadables.withIndex()) {
-                val data = fetcher.fetchMediaData(target)
+            val downloadables = extraction.downloadables
+            for ((index, target) in downloadables.withIndex()) {
+                val data = fetcher.fetchMediaData(target, MediaDataFetcherOptions(
+                    onProgressEmit = { progress ->
+                        status.downloading(progress, index, downloadables.size)
+                    }
+                ))
                 val result = media.writeFileInMediaStore(data, target.filename, target.contentType)
                 log("Download of file \"${target.filename}\" completed successfully")
                 repository.update(download) {

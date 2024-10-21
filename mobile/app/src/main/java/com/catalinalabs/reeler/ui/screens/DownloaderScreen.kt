@@ -15,7 +15,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.FileDownloadDone
-import androidx.compose.material.icons.rounded.VideoLibrary
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -57,7 +56,7 @@ fun DownloaderScreen(
     val download by viewModel.download.collectAsState()
 
     LaunchedEffect(status) {
-        if (status is DownloadStatus.DownloadSuccess) {
+        if (status is DownloadStatus.Success) {
             viewModel.updateSourceUrl("")
         }
     }
@@ -165,7 +164,7 @@ fun DownloaderScreenPreview() {
     ReelerTheme {
         DownloaderScreen(
             sourceUrl = "",
-            status = DownloadStatus.DownloadSuccess,
+            status = DownloadStatus.Success,
             download = DownloadMockData.forPreview[0],
             onVideoUrlChange = { },
             startDownloadProcess = { },
@@ -240,7 +239,6 @@ fun DownloadFieldPreview() {
 fun DownloadProcessStatusTracker(
     status: DownloadStatus,
     modifier: Modifier = Modifier,
-    successContent: @Composable () -> Unit = { },
 ) {
     Box(modifier = modifier) {
         Column(
@@ -260,28 +258,38 @@ fun DownloadProcessStatusTracker(
                     )
                 }
 
-                is DownloadStatus.ProcessingSuccess -> {
-                    Icon(
-                        imageVector = Icons.Rounded.VideoLibrary,
-                        contentDescription = null,
-                        modifier = Modifier.size(40.dp),
-                    )
-                    Text(
-                        text = stringResource(R.string.your_video_was_processed_successfully),
-                    )
-                    successContent()
-                }
-
                 is DownloadStatus.Downloading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(40.dp),
-                    )
+                    Box(modifier = Modifier.size(40.dp)) {
+                        if (status.progress != null) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(40.dp),
+                                progress = {
+                                    status.progress.toFloat() / 100
+                                }
+                            )
+                            Text(
+                                text = "${status.progress.toInt()}%",
+                                modifier = Modifier.align(Alignment.Center),
+                                style = MaterialTheme.typography.labelSmall,
+                            )
+                        } else {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(40.dp),
+                            )
+                        }
+                    }
                     Text(
-                        text = stringResource(R.string.download_in_progress),
+                        text = if (status.index != null && status.count != null && status.count > 1) {
+                            stringResource(
+                                R.string.download_d_d_in_progress,
+                                status.index,
+                                status.count
+                            )
+                        } else stringResource(R.string.download_in_progress),
                     )
                 }
 
-                is DownloadStatus.DownloadSuccess -> {
+                is DownloadStatus.Success -> {
                     Icon(
                         imageVector = Icons.Rounded.FileDownloadDone,
                         contentDescription = null,
@@ -319,10 +327,10 @@ fun DownloadProcessStatusTrackerPreviewWhenProcessing() {
 
 @Preview(showBackground = true)
 @Composable
-fun DownloadProcessStatusTrackerPreviewWhenProcessingSuccess() {
+fun DownloadProcessStatusTrackerPreviewWhenDownloading() {
     ReelerTheme {
         DownloadProcessStatusTracker(
-            status = DownloadStatus.ProcessingSuccess,
+            status = DownloadStatus.Downloading(),
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -330,10 +338,21 @@ fun DownloadProcessStatusTrackerPreviewWhenProcessingSuccess() {
 
 @Preview(showBackground = true)
 @Composable
-fun DownloadProcessStatusTrackerPreviewWhenDownloading() {
+fun DownloadProcessStatusTrackerPreviewWhenDownloadingWithProgress() {
     ReelerTheme {
         DownloadProcessStatusTracker(
-            status = DownloadStatus.Downloading,
+            status = DownloadStatus.Downloading(50.0),
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun DownloadProcessStatusTrackerPreviewWhenDownloadingWithProgressIndexed() {
+    ReelerTheme {
+        DownloadProcessStatusTracker(
+            status = DownloadStatus.Downloading(50.0, 1, 10),
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -344,7 +363,7 @@ fun DownloadProcessStatusTrackerPreviewWhenDownloading() {
 fun DownloadProcessStatusTrackerPreviewWhenDownloadSuccess() {
     ReelerTheme {
         DownloadProcessStatusTracker(
-            status = DownloadStatus.DownloadSuccess,
+            status = DownloadStatus.Success,
             modifier = Modifier.fillMaxWidth(),
         )
     }

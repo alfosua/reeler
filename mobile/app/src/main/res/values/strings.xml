@@ -15,4 +15,5 @@
     <string name="downloads">Downloads</string>
     <string name="premium">Premium</string>
     <string name="the_file_could_not_be_shared">The file could not be shared.</string>
+    <string name="download_d_d_in_progress">Download %d/%d in progress...</string>
 </resources>
