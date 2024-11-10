@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
@@ -17,8 +16,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.catalinalabs.reeler.data.schema.DownloadLog
 import com.catalinalabs.reeler.data.testing.DownloadMockData
-import com.catalinalabs.reeler.ui.components.AdBanner
-import com.catalinalabs.reeler.ui.components.AdBannerSize
 import com.catalinalabs.reeler.ui.components.DownloadItem
 import com.catalinalabs.reeler.ui.models.DownloadActionsViewModel
 import com.catalinalabs.reeler.ui.models.HistoryViewModel
@@ -63,15 +60,6 @@ fun HistoryScreen(
     LazyColumn(modifier) {
         itemsIndexed(downloads) { index, download ->
             val filePath = download.info?.file?.filePath
-            if (index == 0) {
-                Spacer(Modifier.height(32.dp))
-                AdBanner(
-                    size = AdBannerSize.Small,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                )
-            }
             DownloadItem(
                 download = download,
                 onItemClick = {
@@ -85,14 +73,6 @@ fun HistoryScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
             Spacer(Modifier.height(16.dp))
-            if ((index + 1) % 5 == 0) {
-                AdBanner(
-                    size = AdBannerSize.Small,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                )
-            }
         }
     }
 }
