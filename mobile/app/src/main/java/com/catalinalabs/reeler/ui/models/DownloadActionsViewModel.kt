@@ -22,13 +22,16 @@ class DownloadActionsViewModel @Inject constructor(
     private val media: ReelerMediaService,
 ) : ViewModel() {
     fun openItemOnSocialMedia(context: Context, download: DownloadLog) {
+        val sourceUrl = download.info?.sourceUrl ?: return
         try {
-            val appIntent = Intent(Intent.ACTION_VIEW)
-            appIntent.data = Uri.parse(download.info?.sourceUrl)
-            appIntent.setPackage("com.instagram.android")
-            context.startActivity(appIntent)
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(sourceUrl))
+            context.startActivity(intent)
         } catch (e: Exception) {
-            TODO("Handle case where Instagram is not installed")
+            Toast.makeText(
+                context,
+                context.getString(R.string.no_app_found_to_open_this_link),
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -69,9 +72,9 @@ class DownloadActionsViewModel @Inject constructor(
         val mediaStoreId = target?.mediaStoreId
         val filePath = target?.filePath
         val uri = if (mediaStoreId != null) {
-            media.getContentUriFromId(mediaStoreId)
+            media.getContentUriFromId(mediaStoreId, target.contentType)
         } else if (filePath != null) {
-            media.getContentUriFromFilePath(filePath)
+            media.getContentUriFromFilePath(filePath, target.contentType)
         } else {
             null
         }

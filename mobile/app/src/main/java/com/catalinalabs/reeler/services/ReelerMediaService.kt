@@ -15,32 +15,59 @@ class ReelerMediaService @Inject constructor(
 ) {
     private val contentResolver = context.contentResolver
 
-    fun getContentUriFromId(id: Long): Uri {
-        val baseUri = getBaseContentUri()
+    fun getContentUriFromId(id: Long, mimeType: String? = null): Uri {
+        val baseUri = getBaseContentUri(mimeType)
         return ContentUris.withAppendedId(baseUri, id)
     }
 
-    fun writeFileInMediaStore(
-        data: ByteArray,
+    /**
+     * Creates the media entry and hands the caller an OutputStream to write
+     * into, so downloads can be streamed to disk instead of buffered in
+     * memory. Images land in Pictures/Reeler, everything else in
+     * Downloads/Reeler Videos.
+     */
+    suspend fun writeFileInMediaStore(
         filename: String,
         mimeType: String,
+        write: suspend (java.io.OutputStream) -> Unit,
     ): WriteFileResult {
-        val targetPath = Environment.DIRECTORY_DOWNLOADS + "/Reeler Videos"
+        val isImage = mimeType.startsWith("image/")
+        val targetPath = if (isImage) {
+            Environment.DIRECTORY_PICTURES + "/Reeler"
+        } else {
+            Environment.DIRECTORY_DOWNLOADS + "/Reeler Videos"
+        }
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
             put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
-            put(MediaStore.MediaColumns.RELATIVE_PATH, targetPath)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.MediaColumns.RELATIVE_PATH, targetPath)
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
         }
-        val baseUri = getBaseContentUri()
+        val baseUri = getBaseContentUri(mimeType)
         val uri = contentResolver.insert(baseUri, contentValues)
+            ?: throw IllegalStateException("Could not create media entry for \"$filename\"")
 
         Log.d(
             ::ReelerMediaService.name,
             "Saving file \"$filename\" to \"$targetPath\" as media ($uri)"
         )
 
-        contentResolver.openOutputStream(uri!!)?.use {
-            it.write(data)
+        try {
+            contentResolver.openOutputStream(uri)?.use {
+                write(it)
+            } ?: throw IllegalStateException("Could not open output stream for $uri")
+        } catch (e: Exception) {
+            contentResolver.delete(uri, null, null)
+            throw e
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val publish = ContentValues().apply {
+                put(MediaStore.MediaColumns.IS_PENDING, 0)
+            }
+            contentResolver.update(uri, publish, null, null)
         }
 
         val projection = arrayOf(MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA)
@@ -55,13 +82,13 @@ class ReelerMediaService @Inject constructor(
             }
         }
 
-        TODO("Handle case when cursor is null or when no data is found")
+        throw IllegalStateException("Could not resolve saved media entry for \"$filename\"")
     }
 
     data class WriteFileResult(val id: Long, val filePath: String)
 
-    fun getContentUriFromFilePath(filePath: String): Uri? {
-        val baseUri = getBaseContentUri()
+    fun getContentUriFromFilePath(filePath: String, mimeType: String? = null): Uri? {
+        val baseUri = getBaseContentUri(mimeType)
         val projection = arrayOf(MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DATA)
         val selection = "${MediaStore.MediaColumns.DATA} = ?"
         val selectionArgs = arrayOf(filePath)
@@ -95,8 +122,11 @@ class ReelerMediaService @Inject constructor(
     }
 
     @Suppress("MemberVisibilityCanBePrivate")
-    fun getBaseContentUri(): Uri {
+    fun getBaseContentUri(mimeType: String? = null): Uri {
         return when {
+            mimeType?.startsWith("image/") == true ->
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q ->
                 MediaStore.Downloads.EXTERNAL_CONTENT_URI
 

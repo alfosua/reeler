@@ -20,6 +20,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.rounded.Collections
+import androidx.compose.material.icons.rounded.Image
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -50,6 +52,7 @@ import coil.request.ImageRequest
 import com.catalinalabs.reeler.R
 import com.catalinalabs.reeler.data.schema.DownloadLog
 import com.catalinalabs.reeler.data.testing.DownloadMockData
+import com.catalinalabs.reeler.logic.MediaType
 import com.catalinalabs.reeler.ui.models.DownloadActionsViewModel
 import com.catalinalabs.reeler.ui.theme.ReelerTheme
 import java.util.Locale
@@ -199,28 +202,56 @@ fun VideoThumbnailOverlay(
     download: DownloadLog,
     modifier: Modifier = Modifier,
 ) {
-    val timeText = download.info?.duration?.let {
-        val minutes = it.toInt() / 60
-        val seconds = it.toInt() % 60
-        String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
-    } ?: "00:00"
+    val info = download.info
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .padding(start = 4.dp, bottom = 4.dp),
     ) {
-        Icon(
-            imageVector = Icons.Rounded.PlayArrow,
-            contentDescription = null,
-            tint = Color.White,
-            modifier = Modifier.padding(end = 4.dp)
-        )
-        Text(
-            text = timeText,
-            color = Color.White,
-            style = MaterialTheme.typography.labelLarge,
-        )
+        when (info?.type) {
+            MediaType.Image -> {
+                Icon(
+                    imageVector = Icons.Rounded.Image,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+            }
+
+            MediaType.Carousel -> {
+                Icon(
+                    imageVector = Icons.Rounded.Collections,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                Text(
+                    text = "${info.items.size}",
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+
+            else -> {
+                val timeText = info?.duration?.let {
+                    val minutes = it.toInt() / 60
+                    val seconds = it.toInt() % 60
+                    String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+                } ?: "00:00"
+                Icon(
+                    imageVector = Icons.Rounded.PlayArrow,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.padding(end = 4.dp)
+                )
+                Text(
+                    text = timeText,
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelLarge,
+                )
+            }
+        }
     }
 }
 

@@ -1,23 +1,22 @@
 package com.catalinalabs.reeler
 
-import com.catalinalabs.reeler.logic.instagram.fetchInstagramVideoInfo
-import com.catalinalabs.reeler.logic.tiktok.fetchTiktokVideoInfo
-import com.catalinalabs.reeler.logic.twitter.fetchTwitterVideoInfo
-import com.catalinalabs.reeler.logic.youtube.fetchYoutubeVideoInfo
+import com.catalinalabs.reeler.logic.instagram.InstagramExtractor
+import com.catalinalabs.reeler.logic.tiktok.TiktokExtractor
+import com.catalinalabs.reeler.logic.twitter.TwitterExtractor
+import com.catalinalabs.reeler.logic.youtube.YoutubeExtractor
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 /**
- * Example local unit test, which will execute on the development machine (host).
- *
- * See [testing documentation](http://d.android.com/tools/testing).
+ * Live network tests against real posts; they hit each platform's API, so
+ * they can fail when a post is removed or the platform blocks the runner.
  */
 class VideoInfoFetcherUnitTest {
     @Test
     fun youtube_fetchVideoInfo() {
         val url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
         val videoInfo = runBlocking {
-            fetchYoutubeVideoInfo(url)
+            YoutubeExtractor.extract(url)
         }
         println(videoInfo)
     }
@@ -26,7 +25,7 @@ class VideoInfoFetcherUnitTest {
     fun youtube_fetchVideoInfo_shorts() {
         val url = "https://www.youtube.com/shorts/b5dHKC8wUdc"
         val videoInfo = runBlocking {
-            fetchYoutubeVideoInfo(url)
+            YoutubeExtractor.extract(url)
         }
         println(videoInfo)
     }
@@ -35,7 +34,7 @@ class VideoInfoFetcherUnitTest {
     fun instagram_fetchVideoInfo() {
         val url = "https://www.instagram.com/reels/C_FPxueybUl/"
         val videoInfo = runBlocking {
-            fetchInstagramVideoInfo(url)
+            InstagramExtractor.extract(url)
         }
         println(videoInfo)
     }
@@ -44,7 +43,7 @@ class VideoInfoFetcherUnitTest {
     fun tiktok_fetchVideoInfo() {
         val url = "https://www.tiktok.com/@.bestmode/video/7424109534500687136"
         val videoInfo = runBlocking {
-            fetchTiktokVideoInfo(url)
+            TiktokExtractor.extract(url)
         }
         println(videoInfo)
     }
@@ -53,7 +52,7 @@ class VideoInfoFetcherUnitTest {
     fun twitter_fetchVideoInfo() {
         val url = "https://x.com/honordetigre/status/1845049037042413773"
         val videoInfo = runBlocking {
-            fetchTwitterVideoInfo(url)
+            TwitterExtractor.extract(url)
         }
         println(videoInfo)
     }

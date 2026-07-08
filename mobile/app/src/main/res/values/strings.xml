@@ -15,5 +15,24 @@
     <string name="downloads">Downloads</string>
     <string name="premium">Premium</string>
     <string name="the_file_could_not_be_shared">The file could not be shared.</string>
-    <string name="download_d_d_in_progress">Download %d/%d in progress...</string>
+    <string name="download_d_d_in_progress">Download %1$d/%2$d in progress...</string>
+    <string name="no_app_found_to_open_this_link">No app found to open this link.</string>
+    <string name="paste">Paste</string>
+    <string name="supported_platforms_hint">Works with YouTube, TikTok, Instagram, Twitter/X, Facebook, Reddit and Pinterest</string>
+    <string name="image_downloaded_successfully">Media downloaded successfully!</string>
+    <string name="premium_title">Reeler Premium</string>
+    <string name="premium_subtitle">Unlock the best downloading experience</string>
+    <string name="premium_feature_no_ads">No ads, ever</string>
+    <string name="premium_feature_unlimited">Unlimited downloads</string>
+    <string name="premium_feature_hd">Best available quality</string>
+    <string name="premium_feature_support">Priority support</string>
+    <string name="sign_in">Sign in</string>
+    <string name="sign_out">Sign out</string>
+    <string name="subscribe">Subscribe</string>
+    <string name="premium_active">You are a Premium member 🎉</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="create_account">Create account</string>
+    <string name="continue_text">Continue</string>
+    <string name="verification_code">Verification code</string>
 </resources>

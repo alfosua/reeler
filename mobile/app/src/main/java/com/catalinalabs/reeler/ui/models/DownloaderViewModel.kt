@@ -16,6 +16,7 @@ import com.catalinalabs.reeler.data.live.DownloadStatusHolder
 import com.catalinalabs.reeler.data.schema.DownloadLog
 import com.catalinalabs.reeler.services.DownloadWorker
 import com.catalinalabs.reeler.services.ReelerAdsService
+import com.catalinalabs.reeler.services.ReelerUserService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +29,7 @@ class DownloaderViewModel @Inject constructor(
     private val repository: DownloadRepository,
     private val statusHolder: DownloadStatusHolder,
     private val ads: ReelerAdsService,
+    private val userService: ReelerUserService,
 ) : ViewModel() {
     val status: LiveData<DownloadStatus> = statusHolder.data
     val download: StateFlow<DownloadLog?> = repository.flowMostRecent()
@@ -47,7 +49,9 @@ class DownloaderViewModel @Inject constructor(
                 .setInputData(workDataOf("sourceUrl" to sourceUrl))
                 .build()
             WorkManager.getInstance(context).enqueue(request)
-            ads.showInterstitial(context)
+            if (!userService.isPremiumNow()) {
+                ads.showInterstitial(context)
+            }
         }
     }
 

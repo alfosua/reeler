@@ -22,8 +22,11 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -37,11 +40,13 @@ import androidx.navigation.toRoute
 import com.catalinalabs.reeler.R
 import com.catalinalabs.reeler.ui.components.AdBanner
 import com.catalinalabs.reeler.ui.components.AdBannerSize
+import com.catalinalabs.reeler.ui.models.AdsViewModel
 
 @Composable
 fun BottomNavBar(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    adsViewModel: AdsViewModel? = null,
 ) {
     val currentRoute = navController.currentBackStackEntry?.toRoute<Any>()
     var selectedIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -66,17 +71,22 @@ fun BottomNavBar(
         }
     }
 
+    val showAds by adsViewModel?.showAds?.collectAsState()
+        ?: remember { mutableStateOf(true) }
+
     Column(modifier) {
-        Box(
-            modifier = Modifier
-                .height(100.dp)
-                .fillMaxWidth()
-                .background(color = MaterialTheme.colorScheme.surfaceVariant),
-        ) {
-            AdBanner(
-                size = AdBannerSize.Large,
-                modifier = Modifier.align(Alignment.Center)
-            )
+        if (showAds) {
+            Box(
+                modifier = Modifier
+                    .height(100.dp)
+                    .fillMaxWidth()
+                    .background(color = MaterialTheme.colorScheme.surfaceVariant),
+            ) {
+                AdBanner(
+                    size = AdBannerSize.Large,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
         }
         NavigationBar {
             navBarItems.forEachIndexed { index, item ->

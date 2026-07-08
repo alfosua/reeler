@@ -44,18 +44,27 @@ class DownloadWorker @AssistedInject constructor(
             status.downloading()
             val downloadables = extraction.downloadables
             for ((index, target) in downloadables.withIndex()) {
-                val data = fetcher.fetchMediaData(target, MediaDataFetcherOptions(
-                    onProgressEmit = { progress ->
-                        status.downloading(progress, index, downloadables.size)
-                    }
-                ))
-                val result = media.writeFileInMediaStore(data, target.filename, target.contentType)
+                var contentLength = 0L
+                val result = media.writeFileInMediaStore(
+                    target.filename,
+                    target.contentType,
+                ) { output ->
+                    contentLength = fetcher.fetchMediaData(
+                        target,
+                        output,
+                        MediaDataFetcherOptions(
+                            onProgressEmit = { progress ->
+                                status.downloading(progress, index, downloadables.size)
+                            }
+                        ),
+                    )
+                }
                 log("Download of file \"${target.filename}\" completed successfully")
                 repository.update(download) {
                     val file = files[index]
                     file.mediaStoreId = result.id
                     file.filePath = result.filePath
-                    file.contentLength = data.size.toLong()
+                    file.contentLength = contentLength
                     log("Updated download file info for \"${target.filename}\": $file")
                 }
             }
@@ -66,7 +75,7 @@ class DownloadWorker @AssistedInject constructor(
             return Result.success()
         } catch (e: Exception) {
             Log.e(::DownloadWorker.name, "Caught exception in download worker", e)
-            e.message?.let { status.error(it) }
+            status.error(e.message ?: "Something went wrong while downloading.")
             return Result.failure()
         }
     }

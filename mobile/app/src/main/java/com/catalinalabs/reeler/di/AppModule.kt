@@ -10,6 +10,7 @@ import com.catalinalabs.reeler.logic.MediaInfoExtractor
 import com.catalinalabs.reeler.services.ReelerAdsService
 import com.catalinalabs.reeler.services.ReelerMediaService
 import com.catalinalabs.reeler.services.ReelerNotificationsService
+import com.catalinalabs.reeler.services.ReelerUserService
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -45,6 +46,12 @@ object AppModule {
     @Singleton
     fun provideAdsService(): ReelerAdsService {
         return ReelerAdsService()
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserService(): ReelerUserService {
+        return ReelerUserService()
     }
 
     @Provides

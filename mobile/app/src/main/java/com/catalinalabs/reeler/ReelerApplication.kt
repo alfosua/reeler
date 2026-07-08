@@ -8,6 +8,7 @@ import android.os.Build
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.catalinalabs.reeler.services.ReelerNotificationsService
+import com.clerk.api.Clerk
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -16,6 +17,12 @@ class ReelerApplication : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannels()
+        if (BuildConfig.CLERK_PUBLISHABLE_KEY.isNotBlank()) {
+            Clerk.initialize(
+                this,
+                publishableKey = BuildConfig.CLERK_PUBLISHABLE_KEY,
+            )
+        }
     }
 
     private fun createNotificationChannels() {

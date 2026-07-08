@@ -12,13 +12,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.ContentPaste
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.FileDownloadDone
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -30,8 +34,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -49,7 +55,7 @@ fun DownloaderScreen(
     viewModel: DownloaderViewModel,
     actions: DownloadActionsViewModel,
     modifier: Modifier = Modifier,
-    navigateToVideoPlayer: (String) -> Unit = { },
+    navigateToMediaViewer: (DownloadLog) -> Unit = { },
 ) {
     val context = LocalContext.current
     val status by viewModel.status.observeAsState(initial = DownloadStatus.Idle)
@@ -71,7 +77,7 @@ fun DownloaderScreen(
         },
         alreadyHandledSendAction = viewModel.alreadyHandledSendAction,
         markAsAlreadyHandledSendAction = viewModel::markAsAlreadyHandleSendAction,
-        navigateToVideoPlayer = navigateToVideoPlayer,
+        navigateToMediaViewer = navigateToMediaViewer,
         modifier = modifier,
         onOpenOn = {
             download?.let {
@@ -101,7 +107,7 @@ fun DownloaderScreen(
     startDownloadProcess: () -> Unit,
     modifier: Modifier = Modifier,
     alreadyHandledSendAction: Boolean = false,
-    navigateToVideoPlayer: (String) -> Unit = { },
+    navigateToMediaViewer: (DownloadLog) -> Unit = { },
     onOpenOn: () -> Unit = { },
     onDelete: () -> Unit = { },
     onShare: () -> Unit = { },
@@ -129,6 +135,12 @@ fun DownloaderScreen(
             onDownloadButtonClick = startDownloadProcess,
             modifier = Modifier.fillMaxWidth(),
         )
+        Text(
+            text = stringResource(R.string.supported_platforms_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp),
+        )
         if (download != null) {
             Text(
                 text = "Most recent download",
@@ -138,10 +150,7 @@ fun DownloaderScreen(
             DownloadItem(
                 download = download,
                 onItemClick = {
-                    val filePath = download.info?.file?.filePath
-                    if (filePath != null) {
-                        navigateToVideoPlayer(filePath)
-                    }
+                    navigateToMediaViewer(download)
                 },
                 onOpenOn = onOpenOn,
                 onShare = onShare,
@@ -180,6 +189,8 @@ fun DownloadField(
     onDownloadButtonClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val clipboard = LocalClipboardManager.current
+
     Row(modifier = modifier.padding(8.dp)) {
         OutlinedTextField(
             value = videoUrl,
@@ -197,6 +208,25 @@ fun DownloadField(
             label = {
                 Text(stringResource(R.string.paste_video_link_here))
             },
+            trailingIcon = {
+                IconButton(
+                    onClick = {
+                        val text = clipboard.getText()?.text
+                        if (!text.isNullOrBlank()) {
+                            onVideoUrlChange(text.trim())
+                        }
+                    },
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ContentPaste,
+                        contentDescription = stringResource(R.string.paste),
+                    )
+                }
+            },
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go),
+            keyboardActions = KeyboardActions(
+                onGo = { onDownloadButtonClick() },
+            ),
             modifier = Modifier.weight(1f),
         )
         Button(
@@ -282,7 +312,7 @@ fun DownloadProcessStatusTracker(
                         text = if (status.index != null && status.count != null && status.count > 1) {
                             stringResource(
                                 R.string.download_d_d_in_progress,
-                                status.index,
+                                status.index + 1,
                                 status.count
                             )
                         } else stringResource(R.string.download_in_progress),
@@ -305,7 +335,9 @@ fun DownloadProcessStatusTracker(
                         modifier = Modifier.size(40.dp),
                     )
                     Text(
-                        text = stringResource(R.string.something_went_wrong),
+                        text = status.message.ifBlank {
+                            stringResource(R.string.something_went_wrong)
+                        },
                         textAlign = TextAlign.Center,
                     )
                 }
@@ -331,28 +363,6 @@ fun DownloadProcessStatusTrackerPreviewWhenDownloading() {
     ReelerTheme {
         DownloadProcessStatusTracker(
             status = DownloadStatus.Downloading(),
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DownloadProcessStatusTrackerPreviewWhenDownloadingWithProgress() {
-    ReelerTheme {
-        DownloadProcessStatusTracker(
-            status = DownloadStatus.Downloading(50.0),
-            modifier = Modifier.fillMaxWidth(),
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DownloadProcessStatusTrackerPreviewWhenDownloadingWithProgressIndexed() {
-    ReelerTheme {
-        DownloadProcessStatusTracker(
-            status = DownloadStatus.Downloading(50.0, 1, 10),
             modifier = Modifier.fillMaxWidth(),
         )
     }

@@ -13,10 +13,18 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
-import com.catalinalabs.reeler.ui.components.VideoPlayer
+import com.catalinalabs.reeler.data.schema.DownloadLog
+import com.catalinalabs.reeler.ui.components.MediaViewer
 import com.catalinalabs.reeler.ui.screens.DownloaderScreen
 import com.catalinalabs.reeler.ui.screens.HistoryScreen
 import com.catalinalabs.reeler.ui.screens.PremiumScreen
+
+fun NavHostController.navigateToMediaViewer(download: DownloadLog) {
+    val file = download.info?.file
+        ?: download.info?.items?.firstOrNull()?.child?.file
+    val filePath = file?.filePath ?: return
+    navigate(Routes.MediaViewer(filePath, file.contentType))
+}
 
 @Composable
 fun Router(
@@ -43,8 +51,8 @@ fun Router(
                 viewModel = hiltViewModel(),
                 actions = hiltViewModel(),
                 modifier = Modifier.fillMaxHeight(),
-                navigateToVideoPlayer = { uri ->
-                    navController.navigate(Routes.VideoPlayer(uri))
+                navigateToMediaViewer = { download ->
+                    navController.navigateToMediaViewer(download)
                 },
             )
         }
@@ -53,18 +61,21 @@ fun Router(
                 viewModel = hiltViewModel(),
                 downloadActionsViewModel = hiltViewModel(),
                 modifier = Modifier.fillMaxHeight(),
-                navigateToVideoPlayer = { uri ->
-                    navController.navigate(Routes.VideoPlayer(uri))
+                navigateToMediaViewer = { download ->
+                    navController.navigateToMediaViewer(download)
                 },
             )
         }
         composable<Routes.Premium> {
-            PremiumScreen()
+            PremiumScreen(
+                viewModel = hiltViewModel(),
+            )
         }
-        composable<Routes.VideoPlayer> { backStackEntry ->
-            val route: Routes.VideoPlayer = backStackEntry.toRoute()
-            VideoPlayer(
+        composable<Routes.MediaViewer> { backStackEntry ->
+            val route: Routes.MediaViewer = backStackEntry.toRoute()
+            MediaViewer(
                 filePath = route.filePath,
+                contentType = route.contentType,
             )
         }
     }

@@ -5,10 +5,16 @@ import kotlinx.serialization.Serializable
 object Routes {
     @Serializable
     object Home
+
     @Serializable
     object Downloads
+
     @Serializable
     object Premium
+
     @Serializable
-    data class VideoPlayer(val filePath: String)
+    data class MediaViewer(
+        val filePath: String,
+        val contentType: String? = null,
+    )
 }

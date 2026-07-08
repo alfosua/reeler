@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -25,7 +25,7 @@ import com.catalinalabs.reeler.ui.theme.ReelerTheme
 fun HistoryScreen(
     viewModel: HistoryViewModel,
     modifier: Modifier = Modifier,
-    navigateToVideoPlayer: (String) -> Unit = { },
+    navigateToMediaViewer: (DownloadLog) -> Unit = { },
     downloadActionsViewModel: DownloadActionsViewModel = viewModel(),
 ) {
     val context = LocalContext.current
@@ -35,7 +35,7 @@ fun HistoryScreen(
     HistoryScreen(
         downloads = downloads,
         modifier = modifier,
-        navigateToVideoPlayer = navigateToVideoPlayer,
+        navigateToMediaViewer = navigateToMediaViewer,
         onOpenOn = {
             downloadActionsViewModel.openItemOnSocialMedia(context, it)
         },
@@ -52,20 +52,17 @@ fun HistoryScreen(
 fun HistoryScreen(
     downloads: List<DownloadLog>,
     modifier: Modifier = Modifier,
-    navigateToVideoPlayer: (String) -> Unit = { },
+    navigateToMediaViewer: (DownloadLog) -> Unit = { },
     onOpenOn: (DownloadLog) -> Unit,
     onShare: (DownloadLog) -> Unit,
     onDelete: (DownloadLog) -> Unit,
 ) {
     LazyColumn(modifier) {
-        itemsIndexed(downloads) { index, download ->
-            val filePath = download.info?.file?.filePath
+        items(downloads, key = { it.id.toHexString() }) { download ->
             DownloadItem(
                 download = download,
                 onItemClick = {
-                    if (filePath != null) {
-                        navigateToVideoPlayer(filePath)
-                    }
+                    navigateToMediaViewer(download)
                 },
                 onOpenOn = { onOpenOn(download) },
                 onShare = { onShare(download) },

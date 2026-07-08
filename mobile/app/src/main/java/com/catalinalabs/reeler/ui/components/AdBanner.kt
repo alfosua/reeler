@@ -31,13 +31,13 @@ fun AdBanner(
                 modifier = Modifier
                     .width(size.width)
                     .height(size.height)
-                    .background(Color.Red)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
                     .align(Alignment.Center),
             ) {
                 Text(
-                    text = "AdMob Banner Here!",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.White,
+                    text = "Ad",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier
                         .align(Alignment.Center),

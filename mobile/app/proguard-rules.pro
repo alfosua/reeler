@@ -19,3 +19,24 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+# --- Reeler rules ---
+
+# java-youtube-downloader pulls in fastjson, whose desktop/server codepaths
+# reference classes that don't exist on Android. Safe to ignore.
+-dontwarn java.awt.**
+-dontwarn javax.money.**
+-dontwarn javax.ws.rs.**
+-dontwarn org.glassfish.jersey.**
+-dontwarn org.javamoney.moneta.**
+-dontwarn org.joda.time.**
+-dontwarn org.slf4j.impl.StaticLoggerBinder
+-dontwarn springfox.documentation.spring.web.json.Json
+
+# fastjson deserializes YouTube models reflectively.
+-keep class com.github.kiulian.downloader.model.** { *; }
+-keep class com.alibaba.fastjson.** { *; }
+
+# Keep line numbers for readable crash reports.
+-keepattributes SourceFile,LineNumberTable
+-dontwarn javax.servlet.**
+-dontwarn org.springframework.**

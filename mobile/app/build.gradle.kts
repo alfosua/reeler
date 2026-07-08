@@ -1,15 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
-    kotlin("plugin.serialization") version "2.0.20"
+    alias(libs.plugins.jetbrains.kotlin.compose)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
     id("io.realm.kotlin")
+    alias(libs.plugins.compose.screenshot)
 }
 
 android {
     namespace = "com.catalinalabs.reeler"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.catalinalabs.reeler"
@@ -22,11 +24,22 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        // Set in gradle.properties (or ~/.gradle/gradle.properties) as
+        // clerkPublishableKey=pk_test_... to enable the premium features.
+        val clerkPublishableKey = project.findProperty("clerkPublishableKey") as? String ?: ""
+        buildConfigField("String", "CLERK_PUBLISHABLE_KEY", "\"$clerkPublishableKey\"")
+
+        // Clerk-hosted checkout/billing page opened by the Subscribe button,
+        // e.g. your Clerk Account Portal user profile billing URL.
+        val premiumCheckoutUrl = project.findProperty("premiumCheckoutUrl") as? String ?: ""
+        buildConfigField("String", "PREMIUM_CHECKOUT_URL", "\"$premiumCheckoutUrl\"")
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -34,18 +47,18 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
+    @Suppress("UnstableApiUsage")
+    experimentalProperties["android.experimental.enableScreenshotTest"] = true
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -54,6 +67,22 @@ android {
 }
 
 val ktor_version: String by project
+
+configurations.all {
+    resolutionStrategy {
+        // The Clerk SDK pulls kotlin-stdlib/kotlinx libraries built with
+        // Kotlin 2.2+, which our Kotlin 2.0.x compiler (pinned by
+        // realm-kotlin) cannot read. Force versions with 2.0-compatible
+        // metadata.
+        force("org.jetbrains.kotlin:kotlin-stdlib:2.0.20")
+        force("org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.0.20")
+        force("org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.0.20")
+        force("org.jetbrains.kotlinx:kotlinx-serialization-core:1.7.3")
+        force("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+        force("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+        force("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    }
+}
 
 dependencies {
 
@@ -86,6 +115,9 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    screenshotTestImplementation(libs.androidx.ui.tooling)
+    screenshotTestImplementation(libs.screenshot.validation.api)
+
     implementation("io.ktor:ktor-client-core:$ktor_version")
     implementation("io.ktor:ktor-client-cio:$ktor_version")
     implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
@@ -102,4 +134,6 @@ dependencies {
     implementation(libs.java.youtube.downloader)
 
     implementation(libs.library.base)
+
+    implementation(libs.clerk.android.api)
 }
