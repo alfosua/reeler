@@ -12,6 +12,7 @@ import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
+import com.clerk.api.sso.OAuthProvider
 import com.clerk.api.signup.attemptVerification
 import com.clerk.api.signup.prepareVerification
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -98,6 +99,20 @@ class PremiumViewModel @Inject constructor(
                     identifier = email.trim(),
                     password = password,
                 )
+            )
+                .onSuccess {
+                    authState = PremiumAuthState.SignedIn
+                }
+                .onFailure {
+                    errorMessage = it.readableMessage ?: "Could not sign in."
+                }
+        }
+    }
+
+    fun signInWithProvider(provider: OAuthProvider) {
+        runAuthAction {
+            SignIn.authenticateWithRedirect(
+                SignIn.AuthenticateWithRedirectParams.OAuth(provider = provider)
             )
                 .onSuccess {
                     authState = PremiumAuthState.SignedIn

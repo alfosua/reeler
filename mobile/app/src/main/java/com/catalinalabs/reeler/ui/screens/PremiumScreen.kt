@@ -20,6 +20,7 @@ import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -43,6 +44,7 @@ import com.catalinalabs.reeler.R
 import com.catalinalabs.reeler.ui.models.PremiumAuthState
 import com.catalinalabs.reeler.ui.models.PremiumViewModel
 import com.catalinalabs.reeler.ui.theme.ReelerTheme
+import com.clerk.api.sso.OAuthProvider
 
 @Composable
 fun PremiumScreen(
@@ -67,6 +69,7 @@ fun PremiumScreen(
         onPasswordChange = viewModel::updatePassword,
         onCodeChange = viewModel::updateCode,
         onSignIn = viewModel::signIn,
+        onSignInWithProvider = viewModel::signInWithProvider,
         onSignUp = viewModel::signUp,
         onVerifyCode = viewModel::verifyEmailCode,
         onSignOut = viewModel::signOut,
@@ -97,6 +100,7 @@ fun PremiumScreenContent(
     onPasswordChange: (String) -> Unit = { },
     onCodeChange: (String) -> Unit = { },
     onSignIn: () -> Unit = { },
+    onSignInWithProvider: (OAuthProvider) -> Unit = { },
     onSignUp: () -> Unit = { },
     onVerifyCode: () -> Unit = { },
     onSignOut: () -> Unit = { },
@@ -150,6 +154,7 @@ fun PremiumScreenContent(
                     onEmailChange = onEmailChange,
                     onPasswordChange = onPasswordChange,
                     onSignIn = onSignIn,
+                    onSignInWithProvider = onSignInWithProvider,
                     onSignUp = onSignUp,
                 )
             }
@@ -226,6 +231,7 @@ private fun SignInForm(
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSignIn: () -> Unit,
+    onSignInWithProvider: (OAuthProvider) -> Unit,
     onSignUp: () -> Unit,
 ) {
     Column(
@@ -266,7 +272,53 @@ private fun SignInForm(
             ) {
                 Text(stringResource(R.string.create_account))
             }
+            OrDivider()
+            SsoButton(
+                text = stringResource(R.string.continue_with_google),
+                onClick = { onSignInWithProvider(OAuthProvider.GOOGLE) },
+            )
+            SsoButton(
+                text = stringResource(R.string.continue_with_apple),
+                onClick = { onSignInWithProvider(OAuthProvider.APPLE) },
+            )
+            SsoButton(
+                text = stringResource(R.string.continue_with_microsoft),
+                onClick = { onSignInWithProvider(OAuthProvider.MICROSOFT) },
+            )
         }
+    }
+}
+
+@Composable
+private fun OrDivider(modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+    ) {
+        HorizontalDivider(Modifier.weight(1f))
+        Text(
+            text = stringResource(R.string.or_divider),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 12.dp),
+        )
+        HorizontalDivider(Modifier.weight(1f))
+    }
+}
+
+@Composable
+private fun SsoButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Text(text)
     }
 }
 
